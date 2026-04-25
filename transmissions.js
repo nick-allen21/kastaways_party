@@ -1,8 +1,7 @@
-// 664.LOMITA.CT.94305 transmission log (v6).
+// 664.LOMITA.CT.94305 transmission log.
 // Each transmission `dropAt` is in PT (-07:00 covers the entire run; no DST flip).
 // `body` is rendered exactly as written (whitespace + line breaks preserved, typewriter character-by-character).
 // `pacing` is an optional map: bodyLineIdx -> { ms, pauseAfter } overriding default typewriter rhythm.
-// `rations` is the per-transmission Rations Log snapshot (rendered below the body).
 
 window.TRANSMISSIONS = [
   {
@@ -41,13 +40,6 @@ STAND BY.`,
     pacing: {
       19: { ms: 70, pauseAfter: 800 },  // RESCUE: UNCLEAR.
       25: { ms: 70 }                    // STAND BY.
-    },
-    rations: {
-      rum:     { pct: 100 },
-      whisky:  { pct: 100 },
-      chicken: { pct: 100 },
-      morale:  { pct: null, glitch: true },
-      zyns:    { pct: 100 }
     }
   },
 
@@ -82,13 +74,6 @@ NEXT SIGNAL TOMORROW.`,
       0:  { ms: 70, pauseAfter: 800 },  // WE WERE NOT THE FIRST HERE.
       8:  { ms: 70, pauseAfter: 400 },  // WE FOUGHT WHAT WE COULD.
       17: { ms: 70, pauseAfter: 600 }   // WE ARE COMPLETELY MAROONED.
-    },
-    rations: {
-      rum:     { pct: 80 },
-      whisky:  { pct: 85 },
-      chicken: { pct: 70 },
-      morale:  { pct: null, glitch: true },
-      zyns:    { pct: 75 }
     }
   },
 
@@ -122,13 +107,6 @@ NEXT SIGNAL TOMORROW.`,
     pacing: {
       15: { ms: 70 },                   // AS DELICIOUS AS JATWANI MUST BE —
       16: { ms: 70, pauseAfter: 600 }   // WE ARE HOLDING THE LINE.
-    },
-    rations: {
-      rum:     { pct: 70 },
-      whisky:  { pct: 75 },
-      chicken: { pct: 50 },
-      morale:  { pct: null, glitch: true },
-      zyns:    { pct: 55 }
     }
   },
 
@@ -174,13 +152,6 @@ NEXT SIGNAL TOMORROW.`,
       11: { ms: 18 },                    // THE ALEX MANE CHICKEN.
       13: { ms: 70, pauseAfter: 800 },   // WE THROW ONE LAST BLOWOUT.
       19: { ms: 70, pauseAfter: 600 }    // OWN OUR END. MAXIMUM AURA.
-    },
-    rations: {
-      rum:     { pct: 65 },
-      whisky:  { pct: 70 },
-      chicken: { pct: 35 },
-      morale:  { pct: null, glitch: true },
-      zyns:    { pct: 40 }
     }
   },
 
@@ -217,13 +188,6 @@ SEE YOU ON THE ISLAND.`,
       15: { ms: 18 },                   // DRESS FOR THE BEACH.
       16: { ms: 18, pauseAfter: 400 },  // BRING A BORG.
       18: { ms: 70 }                    // SEE YOU ON THE ISLAND.
-    },
-    rations: {
-      rum:     { pct: 55 },
-      whisky:  { pct: 60 },
-      chicken: { pct: 22 },
-      morale:  { pct: null, glitch: true },
-      zyns:    { pct: 22 }
     }
   },
 
@@ -256,24 +220,8 @@ KAPPA ALPHA · OUT.`,
       4:  { ms: 70, pauseAfter: 1500 }, // IT DOES NOT MATTER ANYMORE.
       12: { ms: 70, pauseAfter: 800 },  // THE LAST RAVE HAS BEGUN.
       14: { ms: 90 }                    // KAPPA ALPHA · OUT.
-    },
-    rations: {
-      rum:     { pct: 40 },
-      whisky:  { pct: 45 },
-      chicken: { pct: 12 },
-      morale:  { pct: null, glitch: true },
-      zyns:    { pct: 8 }
     }
   }
-];
-
-// Static order + display labels for the rations log (matches the keys above).
-window.RATIONS_ORDER = [
-  { key: "rum",     label: "RUM" },
-  { key: "whisky",  label: "WHISKY" },
-  { key: "chicken", label: "ALEX MANE CHICKEN" },
-  { key: "morale",  label: "MORALE" },
-  { key: "zyns",    label: "ZYNS (Rx)" }
 ];
 
 window.SIGNAL_ANCHORS = {

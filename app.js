@@ -3,15 +3,11 @@
 
   const TRANSMISSIONS = window.TRANSMISSIONS || [];
   const ANCHORS = window.SIGNAL_ANCHORS || {};
-  const RATIONS_ORDER = window.RATIONS_ORDER || [];
 
-  const FIRST_DROP = new Date(ANCHORS.firstDrop);
-  const PARTY_START = new Date(ANCHORS.partyStart);
   const SIGNAL_TERMINATED = new Date(ANCHORS.signalTerminated);
 
   // ---- Config ----
   const TYPEWRITER_DEFAULT_MS = 28;
-  const RATIONS_BAR_CELLS = 18;
   const PREFERS_REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const BOOT_PHASES = [
@@ -37,8 +33,6 @@
   const countdownLabelEl = $("countdown-label");
   const countdownValueEl = $("countdown-value");
   const countdownEl = $("countdown");
-  const rationsPctEl = $("rations-pct");
-  const rationsBarEl = $("rations-bar");
   const daysCounterEl = $("days-counter");
   const signalDotEl = $("signal-dot");
   const signalStatusLabelEl = $("signal-status-label");
@@ -46,8 +40,6 @@
   const signalLogToggleEl = $("signal-log-toggle");
   const signalLogListEl = $("signal-log-list");
   const signalLogCountEl = $("signal-log-count");
-  const rationsSectionEl = $("rations");
-  const rationsListEl = $("rations-list");
   const bootSeqEl = $("boot-seq");
   const bootStepsEl = $("boot-seq-steps");
   const bootFlashEl = $("boot-flash");
@@ -71,7 +63,6 @@
   // ---- State ----
   let activeTypewriterTimer = null;
   let currentRenderedId = null;
-  let activeMoraleTimer = null;
   let activeBootTimer = null;
   let activeBootPhaseResolver = null;
   let bootSkipped = false;
@@ -342,7 +333,6 @@
     bootSeqEl.style.opacity = "1";
 
     if (transmissionEl) transmissionEl.dataset.hidden = "true";
-    if (rationsSectionEl) rationsSectionEl.dataset.hidden = "true";
 
     window.__skipBoot = () => {
       if (bootSkipped) return;
@@ -378,7 +368,6 @@
 
     window.__skipBoot = null;
     if (transmissionEl) transmissionEl.dataset.hidden = "false";
-    if (rationsSectionEl) rationsSectionEl.dataset.hidden = "false";
   }
 
   function skipBoot() {
@@ -393,109 +382,6 @@
     }
     if (bootFlashEl) bootFlashEl.dataset.active = "false";
     if (transmissionEl) transmissionEl.dataset.hidden = "false";
-    if (rationsSectionEl) rationsSectionEl.dataset.hidden = "false";
-  }
-
-  // ---------------------------------------------------------------
-  // Rations log
-  // ---------------------------------------------------------------
-
-  function renderBar(pct, cells) {
-    const filled = Math.round((pct / 100) * cells);
-    const empty = cells - filled;
-    return "█".repeat(filled) + "░".repeat(empty);
-  }
-
-  const MORALE_GLYPHS = ["▓", "░", "▒", "█", "?", "▚", "▞"];
-  const MORALE_VALUE_VARIANTS = [
-    "???",
-    "???",
-    "[REDACTED]",
-    "ERR%",
-    "??%",
-    "0_0%",
-    "NULL"
-  ];
-
-  function randomMoraleBar(cells) {
-    let s = "";
-    for (let i = 0; i < cells; i++) {
-      s += MORALE_GLYPHS[Math.floor(Math.random() * MORALE_GLYPHS.length)];
-    }
-    return s;
-  }
-
-  function randomMoraleValue() {
-    if (Math.random() < 0.18) {
-      return Math.floor(Math.random() * 100) + "%";
-    }
-    return MORALE_VALUE_VARIANTS[Math.floor(Math.random() * MORALE_VALUE_VARIANTS.length)];
-  }
-
-  function renderRations(transmission) {
-    if (!rationsListEl) return;
-    const data = (transmission && transmission.rations) || {};
-    rationsListEl.innerHTML = "";
-
-    RATIONS_ORDER.forEach((entry) => {
-      const item = data[entry.key] || {};
-      const isGlitch = !!item.glitch;
-      const pct = typeof item.pct === "number" ? Math.max(0, Math.min(100, item.pct)) : null;
-
-      const li = document.createElement("li");
-      li.className = "rations__row";
-      li.dataset.key = entry.key;
-
-      if (isGlitch) {
-        li.dataset.state = "glitch";
-      } else if (pct !== null && pct < 15) {
-        li.dataset.state = "critical";
-      } else {
-        li.dataset.state = "normal";
-      }
-
-      const label = document.createElement("span");
-      label.className = "rations__label";
-      label.textContent = entry.label;
-      li.appendChild(label);
-
-      const bar = document.createElement("span");
-      bar.className = "rations__bar";
-      bar.textContent = isGlitch
-        ? randomMoraleBar(RATIONS_BAR_CELLS)
-        : renderBar(pct === null ? 0 : pct, RATIONS_BAR_CELLS);
-      li.appendChild(bar);
-
-      const pctEl = document.createElement("span");
-      pctEl.className = "rations__pct";
-      pctEl.textContent = isGlitch
-        ? randomMoraleValue()
-        : (pct === null ? "--%" : Math.round(pct) + "%");
-      li.appendChild(pctEl);
-
-      rationsListEl.appendChild(li);
-    });
-
-    startMoraleTicker();
-  }
-
-  function startMoraleTicker() {
-    if (activeMoraleTimer) {
-      clearInterval(activeMoraleTimer);
-      activeMoraleTimer = null;
-    }
-    if (PREFERS_REDUCED_MOTION) return;
-    activeMoraleTimer = setInterval(tickMorale, 30000);
-  }
-
-  function tickMorale() {
-    if (!rationsListEl) return;
-    const row = rationsListEl.querySelector('.rations__row[data-key="morale"]');
-    if (!row) return;
-    const bar = row.querySelector(".rations__bar");
-    const pct = row.querySelector(".rations__pct");
-    if (bar) bar.textContent = randomMoraleBar(RATIONS_BAR_CELLS);
-    if (pct) pct.textContent = randomMoraleValue();
   }
 
   // ---------------------------------------------------------------
@@ -538,8 +424,6 @@
     const textNode = document.createElement("span");
     bodyEl.appendChild(textNode);
     bodyEl.appendChild(cursorEl);
-
-    renderRations(transmission);
 
     const shouldType =
       !forceInstant &&
@@ -601,21 +485,10 @@
     countdownEl.dataset.state = "active";
   }
 
-  function rationsPercentAt(now) {
-    const total = PARTY_START - FIRST_DROP;
-    const elapsed = Math.max(0, now - FIRST_DROP);
-    return Math.max(0, 100 - (elapsed / total) * 100);
-  }
-
   function tickAmbient() {
-    const now = new Date();
-    const pct = rationsPercentAt(now);
-
-    if (rationsPctEl) rationsPctEl.textContent = Math.round(pct) + "%";
-    if (rationsBarEl) rationsBarEl.textContent = renderBar(pct, RATIONS_BAR_CELLS);
-
     // DAY counter tracks the active transmission index (T1 -> DAY 01, ..., T6 -> DAY 06)
     // not calendar days, so the label flips at midnight when the transmission flips.
+    const now = new Date();
     const current = getCurrentTransmission(now);
     const day = current ? TRANSMISSIONS.indexOf(current) + 1 : 1;
     if (daysCounterEl) {
@@ -806,7 +679,7 @@
   };
 
   // ---------------------------------------------------------------
-  // Respond / KA band (v17)
+  // Respond / KA band (v18)
   // ---------------------------------------------------------------
   // Two-phase conversation, hard safety rails server-side. State is per-
   // transmission (resets at midnight when the next T drops); the receiver
@@ -821,19 +694,19 @@
   // Phase B — connected:
   //   The receiver is now talking to the same KA member. Each follow-up
   //   rolls FOLLOW_RATE up to FOLLOW_MAX sends; the FINAL follow-up is a
-  //   forced fail (LLM-drift cap). So the absolute ceiling is 2 successful
-  //   AI calls per user per transmission (connect + 1 follow-up if the
-  //   coin lands). The full conversation history rides on every successful
-  //   call so the impostor remembers what was said.
+  //   forced fail (LLM-drift cap). So the absolute LLM-call ceiling per
+  //   user per transmission is 1 (connect) + (FOLLOW_MAX - 1) follow-ups
+  //   if every coin lands. The full conversation history rides on every
+  //   successful call so the impostor remembers what was said.
   //
   // Phase C — closed:
   //   Form hidden, KA BAND CLOSED banner shown. Resets when the active
   //   transmission flips.
 
   const FIRST_RATE  = 0.30;          // each first-contact attempt
-  const FIRST_MAX   = 5;             // hard cap on first-contact sends
-  const FOLLOW_RATE = 0.50;          // first follow-up roll
-  const FOLLOW_MAX  = 2;             // total follow-up sends; the 2nd is forced fail
+  const FIRST_MAX   = 3;             // hard cap on first-contact sends
+  const FOLLOW_RATE = 0.50;          // each follow-up roll
+  const FOLLOW_MAX  = 5;             // total follow-up sends; the 5th is forced fail
   const FAIL_MODES = [
     { id: "mid-stall",     weight: 4 },
     { id: "no-carrier",    weight: 2 },
@@ -842,8 +715,9 @@
   ];
   const FAIL_TOTAL_WEIGHT = FAIL_MODES.reduce((s, m) => s + m.weight, 0);
 
-  const RESPOND_LS_KEY  = "respond:v3";          // bumped: state schema gained `conversation`
-  const RECEIVER_LS_KEY = "kastaways:receiver_name";  // global, shared across transmissions
+  const RESPOND_LS_KEY  = "respond:v3";              // state schema (per-transmission)
+  const RECEIVER_LS_KEY = "kastaways:receiver_name"; // global, shared across transmissions
+  const NAME_LOCKED_LS_KEY = "kastaways:name_locked"; // "1" once the user has submitted their first message — name input then stays hidden forever
   const RESPOND_TYPE_MS = 26;
   const HANDLE_MIN_LEN  = 2;
   const HANDLE_MAX_LEN  = 24;
@@ -905,6 +779,20 @@
     } catch (_) { /* noop */ }
   }
 
+  // Once the receiver has submitted their first message, the name input row
+  // disappears for good — the value is just used silently from localStorage.
+  // The flag is global (persists across all transmissions) so day 2 doesn't
+  // re-prompt the user. Returning users on a fresh transmission don't see it.
+  function respondNameLocked() {
+    try {
+      return localStorage.getItem(NAME_LOCKED_LS_KEY) === "1";
+    } catch (_) { return false; }
+  }
+
+  function respondLockName() {
+    try { localStorage.setItem(NAME_LOCKED_LS_KEY, "1"); } catch (_) { /* noop */ }
+  }
+
   function sanitizeHandle(s) {
     return String(s || "")
       .replace(/[^A-Za-z0-9 _'-]/g, "")
@@ -952,11 +840,16 @@
     const closed = phase === "closed";
     const nameOk = respondHandleSet();
     const allowSend = !closed && !respondInFlight && nameOk;
+    const nameLocked = respondNameLocked();
 
     respondEl.dataset.closed = closed ? "true" : "false";
     respondEl.dataset.phase  = phase;
     respondEl.dataset.handle = nameOk ? "set" : "unset";
     if (respondClosedEl) respondClosedEl.hidden = !closed;
+
+    // After the first submit the receiver never sees the NAME row again —
+    // the persisted handle just rides on every API call silently.
+    if (respondHandleRowEl) respondHandleRowEl.hidden = nameLocked;
 
     if (respondInputEl) {
       respondInputEl.disabled = !allowSend;
@@ -1266,6 +1159,14 @@
       { instant: true }
     );
 
+    // Lock the name input forever the moment they fire their first message.
+    // From here on the receiver name rides on every API call silently and
+    // the NAME row stays hidden across reloads + future transmissions.
+    if (!respondNameLocked()) {
+      respondLockName();
+      if (respondHandleRowEl) respondHandleRowEl.hidden = true;
+    }
+
     if (respondInputEl) respondInputEl.value = "";
     respondUpdateCounter();
 
@@ -1462,7 +1363,6 @@
 
     if (shouldRunBoot()) {
       if (transmissionEl) transmissionEl.dataset.hidden = "true";
-      if (rationsSectionEl) rationsSectionEl.dataset.hidden = "true";
       try {
         await runBoot();
       } catch (_) {
@@ -1471,7 +1371,6 @@
       markBooted();
     } else {
       if (transmissionEl) transmissionEl.dataset.hidden = "false";
-      if (rationsSectionEl) rationsSectionEl.dataset.hidden = "false";
     }
 
     renderTransmission(initial);

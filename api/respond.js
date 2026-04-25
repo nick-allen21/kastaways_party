@@ -155,8 +155,8 @@ function sanitizeHistory(raw) {
     if (role === "assistant" && tripsOutputLeak(content)) continue;
     out.push({ role, content });
   }
-  // Keep the last ~6 turns (3 exchanges max — first contact + 2 follow-ups).
-  return out.slice(-6);
+  // Keep the last ~12 turns (6 exchanges — connect + up to 5 follow-ups).
+  return out.slice(-12);
 }
 
 // ----- system prompt ----------------------------------------------------
