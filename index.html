@@ -68,6 +68,29 @@
       <ul class="respond__log" id="respond-log" aria-live="polite"></ul>
 
       <form class="respond__form" id="respond-form" autocomplete="off">
+        <div class="respond__handle-row" id="respond-handle-row">
+          <label class="respond__handle-label" for="respond-handle">HANDLE ›</label>
+          <input
+            class="respond__handle"
+            id="respond-handle"
+            name="handle"
+            type="text"
+            maxlength="24"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="who is receiving?"
+            aria-describedby="respond-handle-help"
+          />
+          <button
+            class="respond__handle-save"
+            id="respond-handle-save"
+            type="button"
+          >[ LOCK IN ]</button>
+        </div>
+        <p class="respond__handle-help" id="respond-handle-help" hidden>
+          your handle is broadcast with every transmit. ka can hear it.
+        </p>
+
         <label class="respond__srlabel" for="respond-input">Reply text</label>
         <textarea
           class="respond__input"
@@ -77,10 +100,11 @@
           maxlength="140"
           placeholder="hello? are you out there?"
           aria-describedby="respond-counter"
+          disabled
         ></textarea>
         <div class="respond__row">
           <span class="respond__counter" id="respond-counter">0/140</span>
-          <button class="respond__send" id="respond-send" type="submit">[ TRANSMIT ]</button>
+          <button class="respond__send" id="respond-send" type="submit" disabled>[ TRANSMIT ]</button>
         </div>
         <div class="respond__bar" id="respond-bar" aria-hidden="true">
           <span class="respond__bar-fill" id="respond-bar-fill"></span>

@@ -65,6 +65,9 @@
   const respondAttemptsEl = $("respond-attempts");
   const respondLogEl     = $("respond-log");
   const respondClosedEl  = $("respond-closed");
+  const respondHandleRowEl  = $("respond-handle-row");
+  const respondHandleEl     = $("respond-handle");
+  const respondHandleSaveEl = $("respond-handle-save");
 
   // ---- State ----
   let activeTypewriterTimer = null;
@@ -804,23 +807,31 @@
   };
 
   // ---------------------------------------------------------------
-  // Respond / KA band (v14)
+  // Respond / KA band (v15)
   // ---------------------------------------------------------------
-  // Per-transmission state, persisted in localStorage so a refresh doesn't
-  // reset the user's attempts. State is keyed by transmission id, so when a
-  // new T drops the channel resets to 3 attempts naturally.
+  // Two-phase conversation, hard safety rails server-side. State is per-
+  // transmission (resets at midnight when the next T drops); receiver
+  // handle is GLOBAL (one entry, persists across transmissions).
   //
-  // Probability ladder (per attempt index, 0-based):
-  //   attempt 0 (first send)   → 20% success
-  //   attempt 1 (second send)  → 50% success
-  //   attempt 2 (third send)   → 0%  success (guaranteed cutoff)
+  // Phase A — first contact:
+  //   Up to FIRST_MAX send attempts at FIRST_RATE each. If all roll fail,
+  //   the channel locks for this transmission. On success, the API picks a
+  //   KA member, opener and topic, calls gpt-4o-mini, and returns the line.
   //
-  // Failure modes are weighted-randomly picked when the gate fails; each
-  // renders a different bar animation + log entry so different users see
-  // different "what went wrong" beats.
+  // Phase B — connected:
+  //   The user is now talking to the same KA member. Each follow-up rolls
+  //   FOLLOW_RATE up to FOLLOW_MAX attempts; the FINAL follow-up is forced
+  //   fail. So the absolute ceiling is 2 successful AI calls per user per
+  //   transmission (initial connect + 1 follow-up if the 50% lands).
+  //
+  // Phase C — closed:
+  //   Form hidden, KA BAND CLOSED banner shown. Resets when the active
+  //   transmission flips.
 
-  const RESPOND_MAX_ATTEMPTS = 3;
-  const SUCCESS_RATES = [0.20, 0.50, 0.00];
+  const FIRST_RATE  = 0.25;          // each first-contact attempt
+  const FIRST_MAX   = 3;             // hard cap on first-contact sends
+  const FOLLOW_RATE = 0.50;          // first follow-up roll
+  const FOLLOW_MAX  = 2;             // total follow-up sends; the 2nd is forced fail
   const FAIL_MODES = [
     { id: "mid-stall",     weight: 4 },
     { id: "no-carrier",    weight: 2 },
@@ -829,13 +840,30 @@
   ];
   const FAIL_TOTAL_WEIGHT = FAIL_MODES.reduce((s, m) => s + m.weight, 0);
 
-  const RESPOND_LS_KEY = "respond:v1";
+  const RESPOND_LS_KEY  = "respond:v2";          // bumped from v1 → wipes old shape on upgrade
+  const RECEIVER_LS_KEY = "kastaways:receiver_name";  // global, shared across transmissions
   const RESPOND_TYPE_MS = 26;
+  const HANDLE_MIN_LEN  = 2;
+  const HANDLE_MAX_LEN  = 24;
 
-  let respondActiveTid = null;       // transmission id this state belongs to
-  let respondState = null;           // { tid, attempts, usedNames, usedTopics, log[] }
+  let respondActiveTid = null;
+  let respondState = null;        // { tid, phase, firstAttempts, followAttempts, connectedName, usedNames, usedTopics, log[] }
+  let respondReceiverName = null; // global handle
   let respondInFlight = false;
   let respondBarTimer = null;
+
+  function respondFreshState(tid) {
+    return {
+      tid: tid,
+      phase: "first",         // "first" | "connected" | "closed"
+      firstAttempts: 0,
+      followAttempts: 0,
+      connectedName: null,
+      usedNames: [],
+      usedTopics: [],
+      log: []
+    };
+  }
 
   function respondLoadState(tid) {
     let raw = null;
@@ -844,17 +872,40 @@
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
-        if (parsed && parsed.tid === tid) return parsed;
+        if (parsed && parsed.tid === tid && typeof parsed.phase === "string") {
+          return parsed;
+        }
       } catch (_) { /* fall through to fresh */ }
     }
-
-    return { tid: tid, attempts: 0, usedNames: [], usedTopics: [], log: [] };
+    return respondFreshState(tid);
   }
 
   function respondSaveState() {
     try {
       localStorage.setItem(RESPOND_LS_KEY, JSON.stringify(respondState));
     } catch (_) { /* noop */ }
+  }
+
+  function respondLoadReceiverName() {
+    try {
+      const v = localStorage.getItem(RECEIVER_LS_KEY) || "";
+      return sanitizeHandle(v) || null;
+    } catch (_) { return null; }
+  }
+
+  function respondSaveReceiverName(name) {
+    try {
+      if (name) localStorage.setItem(RECEIVER_LS_KEY, name);
+      else      localStorage.removeItem(RECEIVER_LS_KEY);
+    } catch (_) { /* noop */ }
+  }
+
+  function sanitizeHandle(s) {
+    return String(s || "")
+      .replace(/[^A-Za-z0-9 _'-]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, HANDLE_MAX_LEN);
   }
 
   function respondResetForTransmission(tid) {
@@ -869,38 +920,77 @@
     respondUpdateCounter();
   }
 
-  function respondRemainingAttempts() {
-    if (!respondState) return RESPOND_MAX_ATTEMPTS;
-    return Math.max(0, RESPOND_MAX_ATTEMPTS - respondState.attempts);
+  function respondPhase() {
+    return respondState ? respondState.phase : "first";
   }
 
   function respondIsClosed() {
-    return respondRemainingAttempts() <= 0;
+    return respondPhase() === "closed";
   }
 
   function respondRenderAttemptsCounter() {
     if (!respondAttemptsEl) return;
-    const n = respondRemainingAttempts();
+    const phase = respondPhase();
+    if (phase === "closed") {
+      respondAttemptsEl.textContent = "BAND CLOSED";
+      respondAttemptsEl.dataset.state = "out";
+      return;
+    }
+    if (phase === "connected") {
+      // Remaining follow-ups counted as "messages left" — even though one of
+      // them will be a forced fail, we frame it as a message budget.
+      const left = Math.max(0, FOLLOW_MAX - respondState.followAttempts);
+      respondAttemptsEl.textContent = "CONNECTED · " + left + " MSG" + (left === 1 ? "" : "S") + " LEFT";
+      respondAttemptsEl.dataset.state = left <= 1 ? "low" : "ok";
+      return;
+    }
+    const n = Math.max(0, FIRST_MAX - respondState.firstAttempts);
     respondAttemptsEl.textContent =
-      n + " ATTEMPT" + (n === 1 ? "" : "S") + " REMAINING";
-    if (n <= 0)      respondAttemptsEl.dataset.state = "out";
+      n + " ATTEMPT" + (n === 1 ? "" : "S") + " TO ESTABLISH UPLINK";
+    if (n <= 0)       respondAttemptsEl.dataset.state = "out";
     else if (n === 1) respondAttemptsEl.dataset.state = "low";
     else              respondAttemptsEl.dataset.state = "ok";
   }
 
+  function respondHandleSet() {
+    return !!respondReceiverName;
+  }
+
+  function respondRenderHandleRow() {
+    if (!respondEl) return;
+    if (respondHandleSet()) {
+      respondEl.dataset.handle = "set";
+      if (respondHandleEl) {
+        respondHandleEl.value = respondReceiverName;
+        respondHandleEl.disabled = true;
+      }
+      if (respondHandleSaveEl) respondHandleSaveEl.textContent = "[ EDIT ]";
+    } else {
+      respondEl.dataset.handle = "unset";
+      if (respondHandleEl)     respondHandleEl.disabled = false;
+      if (respondHandleSaveEl) respondHandleSaveEl.textContent = "[ LOCK IN ]";
+    }
+  }
+
   function respondApplyChannelState() {
     if (!respondEl) return;
-    if (respondIsClosed()) {
-      respondEl.dataset.closed = "true";
-      if (respondClosedEl) respondClosedEl.hidden = false;
-      if (respondInputEl)  respondInputEl.disabled = true;
-      if (respondSendEl)   respondSendEl.disabled  = true;
-    } else {
-      respondEl.dataset.closed = "false";
-      if (respondClosedEl) respondClosedEl.hidden = true;
-      if (respondInputEl)  respondInputEl.disabled = respondInFlight;
-      if (respondSendEl)   respondSendEl.disabled  = respondInFlight;
+    const phase = respondPhase();
+    const closed = phase === "closed";
+    const allowSend = !closed && !respondInFlight && respondHandleSet();
+
+    respondEl.dataset.closed = closed ? "true" : "false";
+    respondEl.dataset.phase  = phase;
+    if (respondClosedEl) respondClosedEl.hidden = !closed;
+
+    if (respondInputEl) {
+      respondInputEl.disabled = !allowSend;
+      respondInputEl.placeholder = phase === "first"
+        ? "hello? are you out there?"
+        : "static crackles. say something to keep them on the line...";
     }
+    if (respondSendEl)   respondSendEl.disabled = !allowSend;
+
+    respondRenderHandleRow();
   }
 
   function respondUpdateCounter() {
@@ -1069,8 +1159,13 @@
   }
 
   // -- success path: animate bar full, fetch /api/respond, typewrite reply ---
+  //
+  // Two-phase: pass connectedName on follow-ups so the server keeps the SAME
+  // KA member voice. On any non-2xx (moderation, upstream, rate-limit,
+  // missing key) we render an indistinguishable "corrupt-receive" failure
+  // so the safety boundary is invisible to a probing receiver.
 
-  async function runSuccess(userText) {
+  async function runSuccess(userText, isFollowUp) {
     await respondAnimateBarTo(72, 900 + Math.random() * 500, "TRANSMITTING...");
 
     let payload = null;
@@ -1080,6 +1175,8 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userText,
+          receiverName: respondReceiverName || "",
+          connectedName: isFollowUp ? (respondState.connectedName || null) : null,
           usedNames:  respondState.usedNames  || [],
           usedTopics: respondState.usedTopics || [],
           tid: respondState.tid
@@ -1091,10 +1188,7 @@
         throw new Error("api: malformed");
       }
     } catch (err) {
-      // API failed mid-success — degrade gracefully into a corrupt-receive failure
-      // instead of awarding the success. This ensures we never commit to a
-      // success in localStorage and then have nothing to show.
-      console.warn("[respond] api failed, falling back to corrupt:", err && err.message);
+      console.warn("[respond] api degraded, falling back to corrupt:", err && err.message);
       await respondAnimateBarTo(100, 350, "TRANSMITTING...");
       respondBarSet("fail-stall", "REPLY CORRUPTED · UNREADABLE", 100);
       await wait(900);
@@ -1111,7 +1205,6 @@
     await respondAnimateBarTo(100, 350, "TRANSMITTING...");
     respondBarSet("success", "REPLY RECEIVED", 100);
 
-    // Bookkeep server's chosen name + topic so we don't repeat them.
     if (payload.name && respondState.usedNames.indexOf(payload.name) === -1) {
       respondState.usedNames.push(payload.name);
     }
@@ -1121,6 +1214,7 @@
 
     return {
       success: true,
+      name: payload.name,
       entry: {
         meta: "KA-026 / " + payload.name.toUpperCase(),
         kind: "recv",
@@ -1156,6 +1250,11 @@
   async function respondHandleSubmit(e) {
     if (e) e.preventDefault();
     if (respondInFlight || respondIsClosed() || !respondState) return;
+    if (!respondHandleSet()) {
+      respondInputEl?.focus();
+      respondHandleEl?.focus();
+      return;
+    }
 
     const userText = (respondInputEl?.value || "").trim().slice(0, 140);
     if (userText.length === 0) {
@@ -1167,52 +1266,74 @@
     if (respondInputEl) respondInputEl.disabled = true;
     if (respondSendEl)  respondSendEl.disabled  = true;
 
-    // Log the outgoing line immediately so the user sees their own send.
     respondPushLog(
-      { meta: "› YOU", kind: "sent", text: userText },
+      { meta: "› " + (respondReceiverName || "YOU").toUpperCase(), kind: "sent", text: userText },
       { instant: true }
     );
 
     if (respondInputEl) respondInputEl.value = "";
     respondUpdateCounter();
 
-    const attemptIdx = respondState.attempts;
-    respondState.attempts = attemptIdx + 1;
+    const phase = respondPhase();
+    const isFollowUp = phase === "connected";
+
+    // Tally the attempt counter for this phase. We commit BEFORE rolling so a
+    // crash mid-roll doesn't grant an infinite retry.
+    if (isFollowUp) {
+      respondState.followAttempts += 1;
+    } else {
+      respondState.firstAttempts += 1;
+    }
     respondSaveState();
     respondRenderAttemptsCounter();
 
-    // Allow QA forcing via ?fail=<mode> / ?force=success
+    // QA forcing.
     const params = new URLSearchParams(window.location.search);
     const forceMode = params.get("force"); // "success"
     const forceFail = params.get("fail");  // mid-stall|no-carrier|ghost|corrupt
 
-    let succeeded = false;
+    let succeeded;
+    let forcedFailMode = forceFail || null;
+
     if (forceMode === "success") {
       succeeded = true;
     } else if (forceFail) {
       succeeded = false;
+    } else if (isFollowUp) {
+      // Final follow-up is a guaranteed fail (LLM-drift cap).
+      if (respondState.followAttempts >= FOLLOW_MAX) {
+        succeeded = false;
+      } else {
+        succeeded = Math.random() < FOLLOW_RATE;
+      }
     } else {
-      const rate = SUCCESS_RATES[Math.min(attemptIdx, SUCCESS_RATES.length - 1)];
-      succeeded = Math.random() < rate;
+      succeeded = Math.random() < FIRST_RATE;
     }
 
-    respondBarSet("sending", "ESTABLISHING UPLINK...", 0);
+    respondBarSet("sending", isFollowUp ? "TRANSMITTING REPLY..." : "ESTABLISHING UPLINK...", 0);
 
-    let entry;
     try {
       if (succeeded) {
-        const result = await runSuccess(userText);
-        entry = result.entry;
+        const result = await runSuccess(userText, isFollowUp);
         if (result.success) {
-          const handle = respondPushLog(entry, { instant: false });
-          await respondTypewriteEntry(handle, entry.text);
+          const handle = respondPushLog(result.entry, { instant: false });
+          await respondTypewriteEntry(handle, result.entry.text);
+          if (!isFollowUp) {
+            // First contact achieved — pin the connected name and pivot into
+            // follow-up phase. Subsequent sends will reuse the same KA voice.
+            respondState.phase = "connected";
+            respondState.connectedName = result.name;
+            respondSaveState();
+          }
         } else {
-          respondPushLog(entry, { instant: true });
+          // API degraded — render the corrupt-receive entry but DO NOT promote
+          // to connected phase. Burns the attempt though (already incremented).
+          respondPushLog(result.entry, { instant: true });
         }
       } else {
-        const modeId = pickFailMode(forceFail);
-        entry = await runFailMode(modeId);
-        respondPushLog(entry, { instant: true });
+        const modeId = pickFailMode(forcedFailMode);
+        const failEntry = await runFailMode(modeId);
+        respondPushLog(failEntry, { instant: true });
       }
     } catch (err) {
       console.error("[respond] unexpected error:", err);
@@ -1222,22 +1343,77 @@
       );
     }
 
+    // Phase transition at the END so the post-event UI matches the new state.
+    if (respondState.phase === "first" && respondState.firstAttempts >= FIRST_MAX) {
+      respondState.phase = "closed";
+    } else if (respondState.phase === "connected" && respondState.followAttempts >= FOLLOW_MAX) {
+      respondState.phase = "closed";
+    }
+    respondSaveState();
+
     await wait(900);
     respondBarHide();
 
     respondInFlight = false;
+    respondRenderAttemptsCounter();
+    respondApplyChannelState();
+  }
+
+  // -- handle (receiver name) --------------------------------------------
+
+  function respondCommitHandle() {
+    if (!respondHandleEl) return;
+    const cleaned = sanitizeHandle(respondHandleEl.value);
+    if (cleaned.length < HANDLE_MIN_LEN) {
+      respondHandleEl.focus();
+      respondHandleEl.classList.add("respond__handle--err");
+      setTimeout(() => respondHandleEl?.classList.remove("respond__handle--err"), 800);
+      return;
+    }
+    respondReceiverName = cleaned;
+    respondSaveReceiverName(cleaned);
+    respondApplyChannelState();
+    respondInputEl?.focus();
+  }
+
+  function respondEditHandle() {
+    if (!respondHandleEl) return;
+    respondReceiverName = null;
+    respondSaveReceiverName(null);
+    respondHandleEl.disabled = false;
+    respondHandleEl.focus();
+    respondHandleEl.select?.();
     respondApplyChannelState();
   }
 
   function respondInit() {
     if (!respondFormEl) return;
 
+    respondReceiverName = respondLoadReceiverName();
+    if (respondHandleEl && respondReceiverName) {
+      respondHandleEl.value = respondReceiverName;
+    }
+
     respondFormEl.addEventListener("submit", respondHandleSubmit);
+
+    if (respondHandleEl) {
+      respondHandleEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          respondCommitHandle();
+        }
+      });
+    }
+    if (respondHandleSaveEl) {
+      respondHandleSaveEl.addEventListener("click", () => {
+        if (respondHandleSet()) respondEditHandle();
+        else                    respondCommitHandle();
+      });
+    }
 
     if (respondInputEl) {
       respondInputEl.addEventListener("input", respondUpdateCounter);
       respondInputEl.addEventListener("keydown", (e) => {
-        // Cmd/Ctrl+Enter sends; plain Enter inserts a newline (textarea default).
         if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
           e.preventDefault();
           respondHandleSubmit(e);
@@ -1245,8 +1421,6 @@
       });
     }
 
-    // Stop tap-to-skip-boot/typewriter handler from swallowing focus when the
-    // user clicks inside the form.
     respondEl?.addEventListener("click", (e) => e.stopPropagation());
   }
 
