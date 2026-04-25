@@ -9,7 +9,7 @@ window.TRANSMISSIONS = [
     id: "T1",
     label: "SIGNAL_INTERCEPTED",
     act: "I",
-    dropAt: "2026-04-27T12:00:00-07:00",
+    dropAt: "2026-04-25T00:00:00-07:00",
     header: "TRANSMISSION 01 · SIGNAL INTERCEPTED · DAY 1",
     body:
 `MAYDAY · MAYDAY · MAYDAY
@@ -55,7 +55,7 @@ STAND BY.`,
     id: "T2",
     label: "THE_RAIDERS",
     act: "I",
-    dropAt: "2026-04-28T12:00:00-07:00",
+    dropAt: "2026-04-28T00:00:00-07:00",
     header: "TRANSMISSION 02 · DAY 2 · THE RAIDERS",
     body:
 `WE WERE NOT THE FIRST HERE.
@@ -96,7 +96,7 @@ NEXT SIGNAL TOMORROW.`,
     id: "T3",
     label: "FADING",
     act: "I",
-    dropAt: "2026-04-29T12:00:00-07:00",
+    dropAt: "2026-04-29T00:00:00-07:00",
     header: "TRANSMISSION 03 · DAY 3 · FADING",
     body:
 `THREE DAYS SINCE THE WRECK.
@@ -136,7 +136,7 @@ NEXT SIGNAL TOMORROW.`,
     id: "T4",
     label: "RESCUE_CANCELLED",
     act: "II",
-    dropAt: "2026-04-30T12:00:00-07:00",
+    dropAt: "2026-04-30T00:00:00-07:00",
     header: "TRANSMISSION 04 · RESCUE CANCELLED",
     stamp: "RESCUE CANCELLED",
     body:
@@ -188,7 +188,7 @@ NEXT SIGNAL TOMORROW.`,
     id: "T5",
     label: "TWENTY_FOUR_HOURS",
     act: "II→III",
-    dropAt: "2026-05-01T12:00:00-07:00",
+    dropAt: "2026-05-01T00:00:00-07:00",
     header: "TRANSMISSION 05 · 24 HOURS",
     body:
 `IT IS TOMORROW.
@@ -231,7 +231,7 @@ SEE YOU ON THE ISLAND.`,
     id: "T6",
     label: "FINAL_TRANSMISSION",
     act: "III",
-    dropAt: "2026-05-02T10:00:00-07:00",
+    dropAt: "2026-05-02T00:00:00-07:00",
     header: "FINAL TRANSMISSION · SIGNAL TERMINATED",
     body:
 `SIGNAL LOCKED.
@@ -277,7 +277,7 @@ window.RATIONS_ORDER = [
 ];
 
 window.SIGNAL_ANCHORS = {
-  firstDrop: "2026-04-27T12:00:00-07:00",
+  firstDrop: "2026-04-25T00:00:00-07:00",
   partyStart: "2026-05-02T14:00:00-07:00",
-  signalTerminated: "2026-05-02T10:00:00-07:00"
+  signalTerminated: "2026-05-02T00:00:00-07:00"
 };

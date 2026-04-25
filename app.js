@@ -14,16 +14,18 @@
   const RATIONS_BAR_CELLS = 18;
   const PREFERS_REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const BOOT_LINES = [
-    "ESTABLISHING SIGNAL...",
-    "SCANNING FREQUENCIES...",
-    "SIGNAL LOCKED · SOURCE: KA-026",
-    "DECRYPTING TRANSMISSION..."
+  const BOOT_PHASES = [
+    { label: "ESTABLISHING SIGNAL...",     barMs: 800 },
+    { label: "SCANNING FREQUENCIES...",    barMs: 850 },
+    { label: "LOCKING SOURCE: KA-026",     barMs: 750 },
+    { label: "DECRYPTING TRANSMISSION...", barMs: 900 }
   ];
+  const BOOT_BAR_CELLS = 18;
   const BOOT_MS_PER_CHAR = 12;
-  const BOOT_LINE_HOLD_MS = 220;
-  const BOOT_FINAL_HOLD_MS = 320;
-  const BOOT_FADE_MS = 200;
+  const BOOT_INTER_PHASE_MS = 150;
+  const BOOT_FINAL_HOLD_MS = 250;
+  const BOOT_FLASH_MS = 200;
+  const BOOT_FADE_MS = 250;
 
   // ---- DOM ----
   const $ = (id) => document.getElementById(id);
@@ -47,13 +49,16 @@
   const rationsSectionEl = $("rations");
   const rationsListEl = $("rations-list");
   const bootSeqEl = $("boot-seq");
-  const bootLineEl = $("boot-seq-line");
+  const bootStepsEl = $("boot-seq-steps");
+  const bootFlashEl = $("boot-flash");
 
   // ---- State ----
   let activeTypewriterTimer = null;
   let currentRenderedId = null;
   let activeMoraleTimer = null;
   let activeBootTimer = null;
+  let activeBootPhaseResolver = null;
+  let bootSkipped = false;
 
   // ---------------------------------------------------------------
   // Selection logic
@@ -172,52 +177,191 @@
     } catch (_) { /* noop */ }
   }
 
-  function typeLineFast(target, line) {
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function emptyBar(cells) {
+    return "░".repeat(cells);
+  }
+
+  function createStepDom(label) {
+    const step = document.createElement("div");
+    step.className = "boot-seq__step";
+
+    const labelEl = document.createElement("div");
+    labelEl.className = "boot-seq__label";
+    labelEl.textContent = "> ";
+
+    const barLine = document.createElement("div");
+    barLine.className = "boot-seq__barline";
+
+    const barLeft = document.createElement("span");
+    barLeft.className = "boot-seq__bracket";
+    barLeft.textContent = "[";
+
+    const barEl = document.createElement("span");
+    barEl.className = "boot-seq__bar";
+    barEl.textContent = emptyBar(BOOT_BAR_CELLS);
+
+    const barRight = document.createElement("span");
+    barRight.className = "boot-seq__bracket";
+    barRight.textContent = "]";
+
+    const tagEl = document.createElement("span");
+    tagEl.className = "boot-seq__tag";
+    tagEl.textContent = "--";
+
+    barLine.appendChild(barLeft);
+    barLine.appendChild(barEl);
+    barLine.appendChild(barRight);
+    barLine.appendChild(document.createTextNode(" "));
+    barLine.appendChild(tagEl);
+
+    step.appendChild(labelEl);
+    step.appendChild(barLine);
+
+    return { step, label: labelEl, bar: barEl, tag: tagEl };
+  }
+
+  function typewriteLabel(target, text, msPerChar) {
     return new Promise((resolve) => {
-      target.textContent = "";
       let i = 0;
+      target.textContent = "> ";
       function step() {
-        if (i >= line.length) {
+        if (bootSkipped) {
+          target.textContent = "> " + text;
           activeBootTimer = null;
           resolve();
           return;
         }
-        target.textContent += line.charAt(i);
+        if (i >= text.length) {
+          activeBootTimer = null;
+          resolve();
+          return;
+        }
+        target.textContent += text.charAt(i);
         i++;
-        activeBootTimer = setTimeout(step, BOOT_MS_PER_CHAR);
+        activeBootTimer = setTimeout(step, msPerChar);
       }
       step();
     });
   }
 
-  async function runBoot() {
-    if (!bootSeqEl || !bootLineEl) return;
+  function fillBar(barEl, tagEl, cells, totalMs) {
+    return new Promise((resolve) => {
+      let filled = 0;
+      const baseMs = totalMs / cells;
+      activeBootPhaseResolver = () => {
+        // snap to full
+        filled = cells;
+        barEl.textContent = "█".repeat(cells);
+        if (tagEl) tagEl.textContent = "OK";
+        activeBootPhaseResolver = null;
+        if (activeBootTimer) {
+          clearTimeout(activeBootTimer);
+          activeBootTimer = null;
+        }
+        resolve();
+      };
 
+      function step() {
+        if (bootSkipped) {
+          if (activeBootPhaseResolver) activeBootPhaseResolver();
+          return;
+        }
+        if (filled >= cells) {
+          if (tagEl) tagEl.textContent = "OK";
+          activeBootPhaseResolver = null;
+          activeBootTimer = null;
+          resolve();
+          return;
+        }
+        filled++;
+        barEl.textContent = "█".repeat(filled) + "░".repeat(cells - filled);
+        if (tagEl && filled < cells) {
+          const pct = Math.round((filled / cells) * 100);
+          tagEl.textContent = pad(pct, 2) + "%";
+        }
+        const jitter = 0.6 + Math.random() * 0.8;
+        activeBootTimer = setTimeout(step, baseMs * jitter);
+      }
+      step();
+    });
+  }
+
+  async function runBootPhase(phase) {
+    const dom = createStepDom();
+    bootStepsEl.appendChild(dom.step);
+    await typewriteLabel(dom.label, phase.label, BOOT_MS_PER_CHAR);
+    if (bootSkipped) {
+      dom.bar.textContent = "█".repeat(BOOT_BAR_CELLS);
+      dom.tag.textContent = "OK";
+      return;
+    }
+    await fillBar(dom.bar, dom.tag, BOOT_BAR_CELLS, phase.barMs);
+  }
+
+  async function flashScreen() {
+    if (!bootFlashEl) return;
+    bootFlashEl.dataset.active = "true";
+    await wait(BOOT_FLASH_MS);
+    bootFlashEl.dataset.active = "false";
+  }
+
+  async function fadeOutBoot() {
+    if (!bootSeqEl) return;
+    bootSeqEl.style.opacity = "0";
+    await wait(BOOT_FADE_MS);
+    bootSeqEl.hidden = true;
+  }
+
+  async function runBoot() {
+    if (!bootSeqEl || !bootStepsEl) return;
+
+    bootSkipped = false;
+    bootStepsEl.innerHTML = "";
     bootSeqEl.hidden = false;
     bootSeqEl.style.opacity = "1";
 
     if (transmissionEl) transmissionEl.dataset.hidden = "true";
     if (rationsSectionEl) rationsSectionEl.dataset.hidden = "true";
 
-    for (let i = 0; i < BOOT_LINES.length; i++) {
-      await typeLineFast(bootLineEl, BOOT_LINES[i]);
-      if (i < BOOT_LINES.length - 1) {
-        await wait(BOOT_LINE_HOLD_MS);
+    window.__skipBoot = () => {
+      if (bootSkipped) return;
+      bootSkipped = true;
+      if (activeBootTimer) {
+        clearTimeout(activeBootTimer);
+        activeBootTimer = null;
+      }
+      if (activeBootPhaseResolver) activeBootPhaseResolver();
+    };
+
+    for (let i = 0; i < BOOT_PHASES.length; i++) {
+      await runBootPhase(BOOT_PHASES[i]);
+      if (bootSkipped) break;
+      if (i < BOOT_PHASES.length - 1) {
+        await wait(BOOT_INTER_PHASE_MS);
       }
     }
 
+    if (bootSkipped) {
+      // make sure every phase row visually completes
+      bootStepsEl.querySelectorAll(".boot-seq__step").forEach((step) => {
+        const bar = step.querySelector(".boot-seq__bar");
+        const tag = step.querySelector(".boot-seq__tag");
+        if (bar) bar.textContent = "█".repeat(BOOT_BAR_CELLS);
+        if (tag) tag.textContent = "OK";
+      });
+    }
+
     await wait(BOOT_FINAL_HOLD_MS);
+    await flashScreen();
+    await fadeOutBoot();
 
-    bootSeqEl.style.opacity = "0";
-    await wait(BOOT_FADE_MS);
-    bootSeqEl.hidden = true;
-
+    window.__skipBoot = null;
     if (transmissionEl) transmissionEl.dataset.hidden = "false";
     if (rationsSectionEl) rationsSectionEl.dataset.hidden = "false";
-  }
-
-  function wait(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   function skipBoot() {
@@ -225,10 +369,12 @@
       clearTimeout(activeBootTimer);
       activeBootTimer = null;
     }
+    activeBootPhaseResolver = null;
     if (bootSeqEl) {
       bootSeqEl.hidden = true;
       bootSeqEl.style.opacity = "1";
     }
+    if (bootFlashEl) bootFlashEl.dataset.active = "false";
     if (transmissionEl) transmissionEl.dataset.hidden = "false";
     if (rationsSectionEl) rationsSectionEl.dataset.hidden = "false";
   }
@@ -447,8 +593,10 @@
     if (rationsPctEl) rationsPctEl.textContent = Math.round(pct) + "%";
     if (rationsBarEl) rationsBarEl.textContent = renderBar(pct, RATIONS_BAR_CELLS);
 
-    const msPerDay = 86400000;
-    const day = Math.max(1, Math.floor((now - FIRST_DROP) / msPerDay) + 1);
+    // DAY counter tracks the active transmission index (T1 -> DAY 01, ..., T6 -> DAY 06)
+    // not calendar days, so the label flips at midnight when the transmission flips.
+    const current = getCurrentTransmission(now);
+    const day = current ? TRANSMISSIONS.indexOf(current) + 1 : 1;
     if (daysCounterEl) {
       daysCounterEl.textContent = "DAY " + pad(day) + " OF ██";
     }
@@ -565,6 +713,9 @@
       "click",
       (e) => {
         if (e.target.closest(".signal-log")) return;
+        if (window.__skipBoot) {
+          window.__skipBoot();
+        }
         if (window.__skipTypewriter) {
           window.__skipTypewriter();
           window.__skipTypewriter = null;
