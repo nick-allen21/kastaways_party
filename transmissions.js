@@ -1,7 +1,6 @@
 // KA-026 transmission log (v5).
 // Each transmission `dropAt` is in PT (-07:00 covers the entire run; no DST flip).
 // `body` is rendered exactly as written (whitespace + line breaks preserved, typewriter character-by-character).
-// `crew` is the per-transmission Crew Manifest snapshot. Order is fixed; statuses evolve.
 
 window.TRANSMISSIONS = [
   {
@@ -36,15 +35,7 @@ IF YOU ARE RECEIVING THIS —
 WE NEED HELP BY MAY 2.
 
 NEXT SIGNAL IN 24 HOURS.
-STAND BY.`,
-    crew: [
-      ["FILIP",     "MAINTAINING SIGNAL"],
-      ["MERILL",    "GUARDING PERIMETER"],
-      ["PEARSON",   "UNHARMED"],
-      ["TWEAKSNER", "PUNCHING WAVES"],
-      ["CHASE",     "HIGH AURA"],
-      ["JATWANI",   "UNCONSCIOUS"]
-    ]
+STAND BY.`
   },
 
   {
@@ -73,15 +64,7 @@ CHARLIE GOES, "DAMN."
 
 WE ARE COMPLETELY MAROONED.
 
-NEXT SIGNAL TOMORROW.`,
-    crew: [
-      ["FILIP",     "MAINTAINING SIGNAL"],
-      ["MERILL",    "30 V 1"],
-      ["PEARSON",   "RATIONING"],
-      ["TWEAKSNER", "PUNCHING WAVES"],
-      ["CHASE",     "VO2 MAX DOUBLED"],
-      ["JATWANI",   "UNCONSCIOUS"]
-    ]
+NEXT SIGNAL TOMORROW.`
   },
 
   {
@@ -110,15 +93,7 @@ AS DELICIOUS AS JATWANI MUST BE —
 WE ARE HOLDING THE LINE.
 
 FILIP SAYS THE BYTES ARE GOING.
-NEXT SIGNAL TOMORROW.`,
-    crew: [
-      ["FILIP",     "BYTES FAILING"],
-      ["MERILL",    "30 V 1 STILL"],
-      ["PEARSON",   "LOSING WEIGHT"],
-      ["TWEAKSNER", "PUNCHING WAVES"],
-      ["CHASE",     "ASCENDING"],
-      ["JATWANI",   "LOOKING DELICIOUS"]
-    ]
+NEXT SIGNAL TOMORROW.`
   },
 
   {
@@ -153,15 +128,7 @@ OWN OUR END. MAXIMUM AURA.
 IF YOU ARE RECEIVING THIS —
 COME FIND US.
 
-NEXT SIGNAL TOMORROW.`,
-    crew: [
-      ["FILIP",     "BYTES CRITICAL"],
-      ["MERILL",    "NOT SLEEPING"],
-      ["PEARSON",   "DETERIORATING"],
-      ["TWEAKSNER", "PUNCHING WAVES"],
-      ["CHASE",     "MAXIMUM AURA"],
-      ["JATWANI",   "[REDACTED]"]
-    ]
+NEXT SIGNAL TOMORROW.`
   },
 
   {
@@ -189,15 +156,7 @@ COME AT TWO PM.
 DRESS FOR THE BEACH.
 BRING A BORG.
 
-SEE YOU ON THE ISLAND.`,
-    crew: [
-      ["FILIP",     "LAST PACKETS"],
-      ["MERILL",    "EYES OPEN"],
-      ["PEARSON",   "NEAR-CADAVEROUS"],
-      ["TWEAKSNER", "PUNCHING WAVES"],
-      ["CHASE",     "TRANSCENDED"],
-      ["JATWANI",   "[REDACTED]"]
-    ]
+SEE YOU ON THE ISLAND.`
   },
 
   {
@@ -221,15 +180,7 @@ YOU ARE ALREADY ON THE WAY.
 
 THE LAST RAVE HAS BEGUN.
 
-KAPPA ALPHA · OUT.`,
-    crew: [
-      ["FILIP",     "MAC MINI DEAD"],
-      ["MERILL",    "STILL HERE"],
-      ["PEARSON",   "UPRIGHT"],
-      ["TWEAKSNER", "UNDEFEATED"],
-      ["CHASE",     "ON STAGE"],
-      ["JATWANI",   "NEVER SPOKE"]
-    ]
+KAPPA ALPHA · OUT.`
   }
 ];
 
