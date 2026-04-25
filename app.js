@@ -767,13 +767,13 @@
       if (document.visibilityState === "visible") {
         fireRandomGlitch();
       }
-      scheduleNextGlitch(8000, 15000);
+      scheduleNextGlitch(5000, 10000);
     }, wait);
   }
 
   function startGlitchLoop() {
     if (PREFERS_REDUCED_MOTION) return;
-    scheduleNextGlitch(2500, 5000);
+    scheduleNextGlitch(2000, 4000);
   }
 
   // Debug hook: window.__glitch("rgb"|"slip"|"loss"|"stutter") to fire on demand.
@@ -838,7 +838,7 @@
         renderTransmission(live, { instant: true });
         buildSignalLog();
       }
-      if (!activeGlitchTimer) scheduleNextGlitch(4000, 8000);
+      if (!activeGlitchTimer) scheduleNextGlitch(2500, 5000);
     });
 
     if (shouldRunBoot()) {
