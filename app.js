@@ -722,7 +722,7 @@
   //   FOLLOW_MAX still acts as an LLM-drift ceiling for lucky streaks.
   //
   // Phase C — closed:
-  //   Form hidden, "TRANSMISSION ENDED" banner shown. Resets when the
+  //   Form hidden, "TRANSMISSION LOST" banner shown. Resets when the
   //   active transmission flips.
 
   const FIRST_RATE  = 0.30;          // each first-contact attempt
@@ -846,7 +846,7 @@
   function respondRenderAttemptsCounter() {
     // The counter is intentionally left blank — we don't surface remaining
     // attempts to the receiver. The only public state is "form available"
-    // vs "TRANSMISSION ENDED" (which the closed banner conveys directly).
+    // vs "TRANSMISSION LOST" (which the closed banner conveys directly).
     if (!respondAttemptsEl) return;
     respondAttemptsEl.textContent = "";
     delete respondAttemptsEl.dataset.state;
