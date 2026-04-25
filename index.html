@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>KA-026 · SHORTWAVE MONITOR</title>
+  <meta name="description" content="Incoming distress signal from Flight KA-026. Stranded survivors, intermittent transmission." />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="KA-026 · SIGNAL ACTIVE" />
+  <meta property="og:description" content="Incoming distress signal. Stand by." />
+  <meta property="og:url" content="https://kastaway.party" />
+  <meta name="theme-color" content="#000000" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23000'/><circle cx='16' cy='16' r='6' fill='%234AE290'/></svg>" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <header class="topbar" role="banner">
+    <span class="topbar__id">KAPPA ALPHA · SHORTWAVE MONITOR · KA-026</span>
+    <span class="topbar__status" id="signal-status">
+      <span class="dot" id="signal-dot" aria-hidden="true"></span>
+      <span class="topbar__status-label" id="signal-status-label">SIGNAL STATUS: ACTIVE</span>
+    </span>
+  </header>
+
+  <aside class="ambient" aria-label="Ambient telemetry">
+    <div class="ambient__row">
+      <span class="ambient__label">SUPPLIES</span>
+      <span class="ambient__value" id="supplies-pct">--%</span>
+      <span class="ambient__bar" id="supplies-bar" aria-hidden="true"></span>
+    </div>
+    <div class="ambient__row">
+      <span class="ambient__label">DAYS SINCE WRECK</span>
+      <span class="ambient__value" id="days-counter">DAY -- OF ██</span>
+    </div>
+  </aside>
+
+  <main class="terminal" id="terminal">
+    <div class="transmission" id="transmission">
+      <div class="transmission__stamp" id="transmission-stamp" hidden>RESCUE CANCELLED</div>
+      <h1 class="transmission__header" id="transmission-header"></h1>
+      <pre class="transmission__body" id="transmission-body"><span class="cursor" id="cursor">█</span></pre>
+    </div>
+
+    <div class="countdown" id="countdown" aria-live="polite">
+      <div class="countdown__label" id="countdown-label">NEXT SIGNAL IN</div>
+      <div class="countdown__value" id="countdown-value">--:--:--:--</div>
+    </div>
+
+    <section class="signal-log" id="signal-log">
+      <button type="button" class="signal-log__toggle" id="signal-log-toggle" aria-expanded="false" aria-controls="signal-log-list">
+        [ <span class="signal-log__caret">▸</span> SIGNAL LOG (<span id="signal-log-count">0</span> PRIOR) ]
+      </button>
+      <ul class="signal-log__list" id="signal-log-list" hidden></ul>
+    </section>
+  </main>
+
+  <footer class="footbar" role="contentinfo">
+    KAPPA ALPHA · STANFORD · MAY 2026
+  </footer>
+
+  <script src="transmissions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
