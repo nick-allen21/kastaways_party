@@ -51,6 +51,8 @@
   const bootSeqEl = $("boot-seq");
   const bootStepsEl = $("boot-seq-steps");
   const bootFlashEl = $("boot-flash");
+  const signalLossEl = $("signal-loss");
+  const terminalEl = $("terminal");
 
   // ---- State ----
   let activeTypewriterTimer = null;
@@ -59,6 +61,7 @@
   let activeBootTimer = null;
   let activeBootPhaseResolver = null;
   let bootSkipped = false;
+  let activeGlitchTimer = null;
 
   // ---------------------------------------------------------------
   // Selection logic
@@ -688,6 +691,102 @@
   }
 
   // ---------------------------------------------------------------
+  // Periodic CRT glitches
+  // ---------------------------------------------------------------
+  // Every 8-22s a random glitch fires: brief RGB chromatic split on the
+  // transmission text, a whole-page slip with hue rotation, or a "signal
+  // loss" full-screen static flash. Disabled under prefers-reduced-motion.
+
+  const GLITCH_TYPES = [
+    "rgb",     // chromatic aberration on transmission body + header
+    "rgb",     // (weighted)
+    "slip",    // page-level translate + hue rotate
+    "loss",    // signal-loss static flash
+    "stutter"  // rgb -> brief delay -> slip (compound)
+  ];
+
+  function clearGlitches() {
+    if (bodyEl && bodyEl.dataset.glitch) delete bodyEl.dataset.glitch;
+    if (headerEl && headerEl.dataset.glitch) delete headerEl.dataset.glitch;
+    if (terminalEl && terminalEl.dataset.glitch) delete terminalEl.dataset.glitch;
+    if (signalLossEl) signalLossEl.dataset.active = "false";
+  }
+
+  function fireGlitchRgb() {
+    if (!bodyEl) return;
+    bodyEl.dataset.glitch = "rgb";
+    if (headerEl) headerEl.dataset.glitch = "rgb";
+    setTimeout(() => {
+      if (bodyEl && bodyEl.dataset.glitch === "rgb") delete bodyEl.dataset.glitch;
+      if (headerEl && headerEl.dataset.glitch === "rgb") delete headerEl.dataset.glitch;
+    }, 200);
+  }
+
+  function fireGlitchSlip() {
+    if (!terminalEl) return;
+    terminalEl.dataset.glitch = "slip";
+    setTimeout(() => {
+      if (terminalEl && terminalEl.dataset.glitch === "slip") delete terminalEl.dataset.glitch;
+    }, 180);
+  }
+
+  function fireGlitchLoss() {
+    if (!signalLossEl) return;
+    signalLossEl.dataset.active = "false";
+    void signalLossEl.offsetWidth;
+    signalLossEl.dataset.active = "true";
+    setTimeout(() => {
+      if (signalLossEl) signalLossEl.dataset.active = "false";
+    }, 150);
+  }
+
+  function fireGlitchStutter() {
+    fireGlitchRgb();
+    setTimeout(fireGlitchSlip, 90);
+  }
+
+  function fireRandomGlitch() {
+    const type = GLITCH_TYPES[Math.floor(Math.random() * GLITCH_TYPES.length)];
+    switch (type) {
+      case "rgb":     fireGlitchRgb(); break;
+      case "slip":    fireGlitchSlip(); break;
+      case "loss":    fireGlitchLoss(); break;
+      case "stutter": fireGlitchStutter(); break;
+    }
+  }
+
+  function scheduleNextGlitch(minMs, maxMs) {
+    if (PREFERS_REDUCED_MOTION) return;
+    if (activeGlitchTimer) {
+      clearTimeout(activeGlitchTimer);
+      activeGlitchTimer = null;
+    }
+    const wait = minMs + Math.random() * (maxMs - minMs);
+    activeGlitchTimer = setTimeout(() => {
+      if (document.visibilityState === "visible") {
+        fireRandomGlitch();
+      }
+      scheduleNextGlitch(8000, 22000);
+    }, wait);
+  }
+
+  function startGlitchLoop() {
+    if (PREFERS_REDUCED_MOTION) return;
+    scheduleNextGlitch(3500, 6500);
+  }
+
+  // Debug hook: window.__glitch("rgb"|"slip"|"loss"|"stutter") to fire on demand.
+  window.__glitch = function (type) {
+    switch (type) {
+      case "rgb":     fireGlitchRgb(); break;
+      case "slip":    fireGlitchSlip(); break;
+      case "loss":    fireGlitchLoss(); break;
+      case "stutter": fireGlitchStutter(); break;
+      default:        fireRandomGlitch();
+    }
+  };
+
+  // ---------------------------------------------------------------
   // Init
   // ---------------------------------------------------------------
 
@@ -725,12 +824,20 @@
     );
 
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState !== "visible") return;
+      if (document.visibilityState !== "visible") {
+        if (activeGlitchTimer) {
+          clearTimeout(activeGlitchTimer);
+          activeGlitchTimer = null;
+        }
+        clearGlitches();
+        return;
+      }
       const live = getCurrentTransmission(new Date());
       if (live && live.id !== currentRenderedId && !overrideId) {
         renderTransmission(live, { instant: true });
         buildSignalLog();
       }
+      if (!activeGlitchTimer) scheduleNextGlitch(4000, 8000);
     });
 
     if (shouldRunBoot()) {
@@ -748,6 +855,12 @@
     }
 
     renderTransmission(initial);
+    startGlitchLoop();
+
+    const debugGlitch = new URLSearchParams(window.location.search).get("glitch");
+    if (debugGlitch) {
+      setTimeout(() => window.__glitch(debugGlitch), 600);
+    }
   }
 
   if (document.readyState === "loading") {
