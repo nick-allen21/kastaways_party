@@ -701,7 +701,7 @@
   };
 
   // ---------------------------------------------------------------
-  // Respond / KA band (v18)
+  // Respond / KA band (v20)
   // ---------------------------------------------------------------
   // Two-phase conversation, hard safety rails server-side. State is per-
   // transmission (resets at midnight when the next T drops); the receiver
@@ -715,11 +715,11 @@
   //
   // Phase B — connected:
   //   The receiver is now talking to the same KA member. Each follow-up
-  //   rolls FOLLOW_RATE up to FOLLOW_MAX sends; the FINAL follow-up is a
-  //   forced fail (LLM-drift cap). So the absolute LLM-call ceiling per
-  //   user per transmission is 1 (connect) + (FOLLOW_MAX - 1) follow-ups
-  //   if every coin lands. The full conversation history rides on every
-  //   successful call so the impostor remembers what was said.
+  //   rolls FOLLOW_RATE. ANY drop in this phase (random fail, API-degraded
+  //   corrupt, or the FOLLOW_MAX hard cap) immediately severs the channel —
+  //   no retry until the next transmission drops. So expected exchanges per
+  //   conversation ≈ 1-2: fragile by design, encouraging return visits.
+  //   FOLLOW_MAX still acts as an LLM-drift ceiling for lucky streaks.
   //
   // Phase C — closed:
   //   Form hidden, "TRANSMISSION ENDED" banner shown. Resets when the
@@ -727,8 +727,8 @@
 
   const FIRST_RATE  = 0.30;          // each first-contact attempt
   const FIRST_MAX   = 3;             // hard cap on first-contact sends
-  const FOLLOW_RATE = 0.50;          // each follow-up roll
-  const FOLLOW_MAX  = 5;             // total follow-up sends; the 5th is forced fail
+  const FOLLOW_RATE = 0.50;          // each follow-up roll; one fail closes channel
+  const FOLLOW_MAX  = 5;             // hard cap on consecutive successes; the 5th is forced fail
   const FAIL_MODES = [
     { id: "mid-stall",     weight: 4 },
     { id: "no-carrier",    weight: 2 },
@@ -1237,6 +1237,10 @@
 
     respondBarSet("sending", isFollowUp ? "TRANSMITTING REPLY..." : "ESTABLISHING UPLINK...", 0);
 
+    // Track whether we ended this turn with a delivered reply or with any
+    // kind of drop. Used below for the connected-phase one-strike rule.
+    let dropped = false;
+
     try {
       if (succeeded) {
         const result = await runSuccess(userText, isFollowUp);
@@ -1251,14 +1255,17 @@
             respondSaveState();
           }
         } else {
-          // API degraded — render the corrupt-receive entry but DO NOT promote
-          // to connected phase. Burns the attempt though (already incremented).
+          // API degraded — render the corrupt-receive entry. From the
+          // receiver's POV this is indistinguishable from a real drop, so
+          // it counts as one for the connected-phase one-strike rule.
           respondPushLog(result.entry, { instant: true });
+          dropped = true;
         }
       } else {
         const modeId = pickFailMode(forcedFailMode);
         const failEntry = await runFailMode(modeId);
         respondPushLog(failEntry, { instant: true });
+        dropped = true;
       }
     } catch (err) {
       console.error("[respond] unexpected error:", err);
@@ -1266,12 +1273,19 @@
         { meta: "FAILED · UNKNOWN ERROR", kind: "fail", text: "→ TRANSMISSION FAILED. UNKNOWN." },
         { instant: true }
       );
+      dropped = true;
     }
 
     // Phase transition at the END so the post-event UI matches the new state.
+    //   first → closed: only after FIRST_MAX failed attempts (you get retries).
+    //   connected → closed: ANY drop severs the channel for this transmission
+    //                       (no retries — try again at the next signal drop).
+    //                       FOLLOW_MAX is still a defensive ceiling for lucky
+    //                       streaks; the FOLLOW_MAX-th turn is a forced fail
+    //                       which trips the same drop branch.
     if (respondState.phase === "first" && respondState.firstAttempts >= FIRST_MAX) {
       respondState.phase = "closed";
-    } else if (respondState.phase === "connected" && respondState.followAttempts >= FOLLOW_MAX) {
+    } else if (respondState.phase === "connected" && dropped) {
       respondState.phase = "closed";
     }
     respondSaveState();
