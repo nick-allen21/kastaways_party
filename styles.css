@@ -470,6 +470,8 @@ a { color: var(--green); }
   gap: 8px;
 }
 
+.respond__handle-row[hidden] { display: none; }
+
 .respond__handle-row {
   display: flex;
   align-items: center;
