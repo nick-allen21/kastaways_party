@@ -35,9 +35,9 @@
 
   <aside class="ambient" aria-label="Ambient telemetry">
     <div class="ambient__row">
-      <span class="ambient__label">SUPPLIES</span>
-      <span class="ambient__value" id="supplies-pct">--%</span>
-      <span class="ambient__bar" id="supplies-bar" aria-hidden="true"></span>
+      <span class="ambient__label">RATIONS</span>
+      <span class="ambient__value" id="rations-pct">--%</span>
+      <span class="ambient__bar" id="rations-bar" aria-hidden="true"></span>
     </div>
     <div class="ambient__row">
       <span class="ambient__label">DAYS SINCE WRECK</span>
@@ -46,11 +46,21 @@
   </aside>
 
   <main class="terminal" id="terminal">
+    <div class="boot-seq" id="boot-seq" hidden aria-hidden="true">
+      <pre class="boot-seq__line" id="boot-seq-line"></pre>
+    </div>
+
     <div class="transmission" id="transmission">
       <div class="transmission__stamp" id="transmission-stamp" hidden>RESCUE CANCELLED</div>
       <h1 class="transmission__header" id="transmission-header"></h1>
       <pre class="transmission__body" id="transmission-body"><span class="cursor" id="cursor">█</span></pre>
     </div>
+
+    <section class="rations" id="rations" aria-label="Rations log">
+      <div class="rations__title">RATIONS LOG</div>
+      <div class="rations__rule">─────────────────────────────</div>
+      <ul class="rations__list" id="rations-list"></ul>
+    </section>
 
     <div class="countdown" id="countdown" aria-live="polite">
       <div class="countdown__label" id="countdown-label">NEXT SIGNAL IN</div>

@@ -3,15 +3,27 @@
 
   const TRANSMISSIONS = window.TRANSMISSIONS || [];
   const ANCHORS = window.SIGNAL_ANCHORS || {};
+  const RATIONS_ORDER = window.RATIONS_ORDER || [];
 
   const FIRST_DROP = new Date(ANCHORS.firstDrop);
   const PARTY_START = new Date(ANCHORS.partyStart);
   const SIGNAL_TERMINATED = new Date(ANCHORS.signalTerminated);
 
   // ---- Config ----
-  const TYPEWRITER_MS_PER_CHAR = 28;
-  const SUPPLIES_BAR_CELLS = 18;
+  const TYPEWRITER_DEFAULT_MS = 28;
+  const RATIONS_BAR_CELLS = 18;
   const PREFERS_REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const BOOT_LINES = [
+    "ESTABLISHING SIGNAL...",
+    "SCANNING FREQUENCIES...",
+    "SIGNAL LOCKED · SOURCE: KA-026",
+    "DECRYPTING TRANSMISSION..."
+  ];
+  const BOOT_MS_PER_CHAR = 12;
+  const BOOT_LINE_HOLD_MS = 220;
+  const BOOT_FINAL_HOLD_MS = 320;
+  const BOOT_FADE_MS = 200;
 
   // ---- DOM ----
   const $ = (id) => document.getElementById(id);
@@ -19,11 +31,12 @@
   const bodyEl = $("transmission-body");
   const cursorEl = $("cursor");
   const stampEl = $("transmission-stamp");
+  const transmissionEl = $("transmission");
   const countdownLabelEl = $("countdown-label");
   const countdownValueEl = $("countdown-value");
   const countdownEl = $("countdown");
-  const suppliesPctEl = $("supplies-pct");
-  const suppliesBarEl = $("supplies-bar");
+  const rationsPctEl = $("rations-pct");
+  const rationsBarEl = $("rations-bar");
   const daysCounterEl = $("days-counter");
   const signalDotEl = $("signal-dot");
   const signalStatusLabelEl = $("signal-status-label");
@@ -31,10 +44,16 @@
   const signalLogToggleEl = $("signal-log-toggle");
   const signalLogListEl = $("signal-log-list");
   const signalLogCountEl = $("signal-log-count");
+  const rationsSectionEl = $("rations");
+  const rationsListEl = $("rations-list");
+  const bootSeqEl = $("boot-seq");
+  const bootLineEl = $("boot-seq-line");
 
   // ---- State ----
   let activeTypewriterTimer = null;
   let currentRenderedId = null;
+  let activeMoraleTimer = null;
+  let activeBootTimer = null;
 
   // ---------------------------------------------------------------
   // Selection logic
@@ -60,10 +79,14 @@
   }
 
   // ---------------------------------------------------------------
-  // Typewriter
+  // Typewriter — pacing-aware
   // ---------------------------------------------------------------
 
-  function typewrite(target, text, msPerChar) {
+  function typewrite(target, text, opts) {
+    opts = opts || {};
+    const defaultMs = opts.defaultMs || TYPEWRITER_DEFAULT_MS;
+    const pacing = opts.pacing || {};
+
     return new Promise((resolve) => {
       if (activeTypewriterTimer) {
         clearTimeout(activeTypewriterTimer);
@@ -72,35 +95,244 @@
 
       target.textContent = "";
       let i = 0;
+      let lineIdx = 0;
       const total = text.length;
+
+      function lineMs(idx) {
+        return (pacing[idx] && pacing[idx].ms) || defaultMs;
+      }
 
       function tick() {
         if (i >= total) {
           activeTypewriterTimer = null;
+          if (cursorEl) cursorEl.dataset.paused = "false";
           resolve();
           return;
         }
-        target.textContent += text.charAt(i);
+
+        const ch = text.charAt(i);
+        target.textContent += ch;
         i++;
-        // brief pauses on newlines for breathing room
-        const lastChar = text.charAt(i - 1);
-        const delay = lastChar === "\n" ? msPerChar * 6 : msPerChar;
+
+        let delay;
+        if (ch === "\n") {
+          // End of current line — apply pauseAfter override or default newline pause.
+          const lp = pacing[lineIdx];
+          const pauseAfter = lp && lp.pauseAfter;
+          delay = pauseAfter || lineMs(lineIdx) * 6;
+
+          if (cursorEl && pauseAfter && pauseAfter >= 500) {
+            cursorEl.dataset.paused = "true";
+            setTimeout(() => {
+              if (cursorEl) cursorEl.dataset.paused = "false";
+            }, pauseAfter);
+          }
+
+          lineIdx++;
+        } else {
+          delay = lineMs(lineIdx);
+        }
+
         activeTypewriterTimer = setTimeout(tick, delay);
       }
 
       tick();
 
-      // Skip-on-click anywhere in terminal
       const skip = () => {
         if (activeTypewriterTimer) {
           clearTimeout(activeTypewriterTimer);
           activeTypewriterTimer = null;
         }
+        if (cursorEl) cursorEl.dataset.paused = "false";
         target.textContent = text;
         resolve();
       };
       window.__skipTypewriter = skip;
     });
+  }
+
+  // ---------------------------------------------------------------
+  // Boot / signal acquisition pre-roll
+  // ---------------------------------------------------------------
+
+  function shouldRunBoot() {
+    if (PREFERS_REDUCED_MOTION) return false;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("boot") === "1") return true;
+    try {
+      return sessionStorage.getItem("booted") !== "1";
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function markBooted() {
+    try {
+      sessionStorage.setItem("booted", "1");
+    } catch (_) { /* noop */ }
+  }
+
+  function typeLineFast(target, line) {
+    return new Promise((resolve) => {
+      target.textContent = "";
+      let i = 0;
+      function step() {
+        if (i >= line.length) {
+          activeBootTimer = null;
+          resolve();
+          return;
+        }
+        target.textContent += line.charAt(i);
+        i++;
+        activeBootTimer = setTimeout(step, BOOT_MS_PER_CHAR);
+      }
+      step();
+    });
+  }
+
+  async function runBoot() {
+    if (!bootSeqEl || !bootLineEl) return;
+
+    bootSeqEl.hidden = false;
+    bootSeqEl.style.opacity = "1";
+
+    if (transmissionEl) transmissionEl.dataset.hidden = "true";
+    if (rationsSectionEl) rationsSectionEl.dataset.hidden = "true";
+
+    for (let i = 0; i < BOOT_LINES.length; i++) {
+      await typeLineFast(bootLineEl, BOOT_LINES[i]);
+      if (i < BOOT_LINES.length - 1) {
+        await wait(BOOT_LINE_HOLD_MS);
+      }
+    }
+
+    await wait(BOOT_FINAL_HOLD_MS);
+
+    bootSeqEl.style.opacity = "0";
+    await wait(BOOT_FADE_MS);
+    bootSeqEl.hidden = true;
+
+    if (transmissionEl) transmissionEl.dataset.hidden = "false";
+    if (rationsSectionEl) rationsSectionEl.dataset.hidden = "false";
+  }
+
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function skipBoot() {
+    if (activeBootTimer) {
+      clearTimeout(activeBootTimer);
+      activeBootTimer = null;
+    }
+    if (bootSeqEl) {
+      bootSeqEl.hidden = true;
+      bootSeqEl.style.opacity = "1";
+    }
+    if (transmissionEl) transmissionEl.dataset.hidden = "false";
+    if (rationsSectionEl) rationsSectionEl.dataset.hidden = "false";
+  }
+
+  // ---------------------------------------------------------------
+  // Rations log
+  // ---------------------------------------------------------------
+
+  function renderBar(pct, cells) {
+    const filled = Math.round((pct / 100) * cells);
+    const empty = cells - filled;
+    return "█".repeat(filled) + "░".repeat(empty);
+  }
+
+  const MORALE_GLYPHS = ["▓", "░", "▒", "█", "?", "▚", "▞"];
+  const MORALE_VALUE_VARIANTS = [
+    "???",
+    "???",
+    "[REDACTED]",
+    "ERR%",
+    "??%",
+    "0_0%",
+    "NULL"
+  ];
+
+  function randomMoraleBar(cells) {
+    let s = "";
+    for (let i = 0; i < cells; i++) {
+      s += MORALE_GLYPHS[Math.floor(Math.random() * MORALE_GLYPHS.length)];
+    }
+    return s;
+  }
+
+  function randomMoraleValue() {
+    if (Math.random() < 0.18) {
+      return Math.floor(Math.random() * 100) + "%";
+    }
+    return MORALE_VALUE_VARIANTS[Math.floor(Math.random() * MORALE_VALUE_VARIANTS.length)];
+  }
+
+  function renderRations(transmission) {
+    if (!rationsListEl) return;
+    const data = (transmission && transmission.rations) || {};
+    rationsListEl.innerHTML = "";
+
+    RATIONS_ORDER.forEach((entry) => {
+      const item = data[entry.key] || {};
+      const isGlitch = !!item.glitch;
+      const pct = typeof item.pct === "number" ? Math.max(0, Math.min(100, item.pct)) : null;
+
+      const li = document.createElement("li");
+      li.className = "rations__row";
+      li.dataset.key = entry.key;
+
+      if (isGlitch) {
+        li.dataset.state = "glitch";
+      } else if (pct !== null && pct < 15) {
+        li.dataset.state = "critical";
+      } else {
+        li.dataset.state = "normal";
+      }
+
+      const label = document.createElement("span");
+      label.className = "rations__label";
+      label.textContent = entry.label;
+      li.appendChild(label);
+
+      const bar = document.createElement("span");
+      bar.className = "rations__bar";
+      bar.textContent = isGlitch
+        ? randomMoraleBar(RATIONS_BAR_CELLS)
+        : renderBar(pct === null ? 0 : pct, RATIONS_BAR_CELLS);
+      li.appendChild(bar);
+
+      const pctEl = document.createElement("span");
+      pctEl.className = "rations__pct";
+      pctEl.textContent = isGlitch
+        ? randomMoraleValue()
+        : (pct === null ? "--%" : Math.round(pct) + "%");
+      li.appendChild(pctEl);
+
+      rationsListEl.appendChild(li);
+    });
+
+    startMoraleTicker();
+  }
+
+  function startMoraleTicker() {
+    if (activeMoraleTimer) {
+      clearInterval(activeMoraleTimer);
+      activeMoraleTimer = null;
+    }
+    if (PREFERS_REDUCED_MOTION) return;
+    activeMoraleTimer = setInterval(tickMorale, 30000);
+  }
+
+  function tickMorale() {
+    if (!rationsListEl) return;
+    const row = rationsListEl.querySelector('.rations__row[data-key="morale"]');
+    if (!row) return;
+    const bar = row.querySelector(".rations__bar");
+    const pct = row.querySelector(".rations__pct");
+    if (bar) bar.textContent = randomMoraleBar(RATIONS_BAR_CELLS);
+    if (pct) pct.textContent = randomMoraleValue();
   }
 
   // ---------------------------------------------------------------
@@ -134,13 +366,17 @@
       stampEl.hidden = true;
     }
 
-    if (cursorEl) cursorEl.dataset.hidden = "false";
+    if (cursorEl) {
+      cursorEl.dataset.hidden = "false";
+      cursorEl.dataset.paused = "false";
+    }
 
-    // Replace the body but preserve the cursor span at end
     bodyEl.innerHTML = "";
     const textNode = document.createElement("span");
     bodyEl.appendChild(textNode);
     bodyEl.appendChild(cursorEl);
+
+    renderRations(transmission);
 
     const shouldType =
       !forceInstant &&
@@ -148,7 +384,10 @@
       !hasBeenSeen(transmission.id);
 
     if (shouldType) {
-      await typewrite(textNode, transmission.body, TYPEWRITER_MS_PER_CHAR);
+      await typewrite(textNode, transmission.body, {
+        defaultMs: TYPEWRITER_DEFAULT_MS,
+        pacing: transmission.pacing || {}
+      });
     } else {
       textNode.textContent = transmission.body;
     }
@@ -160,7 +399,7 @@
   }
 
   // ---------------------------------------------------------------
-  // Countdown / supplies / day counter
+  // Countdown / ambient strip / day counter
   // ---------------------------------------------------------------
 
   function pad(n, width) {
@@ -195,24 +434,18 @@
     countdownEl.dataset.state = "active";
   }
 
-  function suppliesPercentAt(now) {
+  function rationsPercentAt(now) {
     const total = PARTY_START - FIRST_DROP;
     const elapsed = Math.max(0, now - FIRST_DROP);
     return Math.max(0, 100 - (elapsed / total) * 100);
   }
 
-  function renderBar(pct, cells) {
-    const filled = Math.round((pct / 100) * cells);
-    const empty = cells - filled;
-    return "█".repeat(filled) + "░".repeat(empty);
-  }
-
   function tickAmbient() {
     const now = new Date();
-    const pct = suppliesPercentAt(now);
+    const pct = rationsPercentAt(now);
 
-    if (suppliesPctEl) suppliesPctEl.textContent = Math.round(pct) + "%";
-    if (suppliesBarEl) suppliesBarEl.textContent = renderBar(pct, SUPPLIES_BAR_CELLS);
+    if (rationsPctEl) rationsPctEl.textContent = Math.round(pct) + "%";
+    if (rationsBarEl) rationsBarEl.textContent = renderBar(pct, RATIONS_BAR_CELLS);
 
     const msPerDay = 86400000;
     const day = Math.max(1, Math.floor((now - FIRST_DROP) / msPerDay) + 1);
@@ -310,14 +543,12 @@
   // Init
   // ---------------------------------------------------------------
 
-  function init() {
+  async function init() {
     const now = new Date();
     const overrideId = getOverrideId();
     const initial = overrideId
       ? TRANSMISSIONS.find((t) => t.id === overrideId)
       : getCurrentTransmission(now);
-
-    renderTransmission(initial);
 
     tickCountdown();
     tickAmbient();
@@ -330,7 +561,6 @@
 
     signalLogToggleEl.addEventListener("click", toggleSignalLog);
 
-    // Skip typewriter on tap-anywhere (mobile-friendly)
     document.addEventListener(
       "click",
       (e) => {
@@ -343,7 +573,6 @@
       { passive: true }
     );
 
-    // Re-check current transmission when tab regains focus
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState !== "visible") return;
       const live = getCurrentTransmission(new Date());
@@ -352,6 +581,22 @@
         buildSignalLog();
       }
     });
+
+    if (shouldRunBoot()) {
+      if (transmissionEl) transmissionEl.dataset.hidden = "true";
+      if (rationsSectionEl) rationsSectionEl.dataset.hidden = "true";
+      try {
+        await runBoot();
+      } catch (_) {
+        skipBoot();
+      }
+      markBooted();
+    } else {
+      if (transmissionEl) transmissionEl.dataset.hidden = "false";
+      if (rationsSectionEl) rationsSectionEl.dataset.hidden = "false";
+    }
+
+    renderTransmission(initial);
   }
 
   if (document.readyState === "loading") {
