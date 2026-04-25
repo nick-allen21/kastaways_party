@@ -806,29 +806,32 @@
   };
 
   // ---------------------------------------------------------------
-  // Respond / KA band (v15)
+  // Respond / KA band (v17)
   // ---------------------------------------------------------------
   // Two-phase conversation, hard safety rails server-side. State is per-
-  // transmission (resets at midnight when the next T drops); receiver
-  // handle is GLOBAL (one entry, persists across transmissions).
+  // transmission (resets at midnight when the next T drops); the receiver
+  // name is GLOBAL (one entry, persists across all 6 transmissions).
   //
   // Phase A — first contact:
-  //   Up to FIRST_MAX send attempts at FIRST_RATE each. If all roll fail,
+  //   Up to FIRST_MAX send attempts at FIRST_RATE each. If every roll fails
   //   the channel locks for this transmission. On success, the API picks a
-  //   KA member, opener and topic, calls gpt-4o-mini, and returns the line.
+  //   KA member + topic and writes back a reply (no fixed opener — the
+  //   model just sounds excited the connection worked).
   //
   // Phase B — connected:
-  //   The user is now talking to the same KA member. Each follow-up rolls
-  //   FOLLOW_RATE up to FOLLOW_MAX attempts; the FINAL follow-up is forced
-  //   fail. So the absolute ceiling is 2 successful AI calls per user per
-  //   transmission (initial connect + 1 follow-up if the 50% lands).
+  //   The receiver is now talking to the same KA member. Each follow-up
+  //   rolls FOLLOW_RATE up to FOLLOW_MAX sends; the FINAL follow-up is a
+  //   forced fail (LLM-drift cap). So the absolute ceiling is 2 successful
+  //   AI calls per user per transmission (connect + 1 follow-up if the
+  //   coin lands). The full conversation history rides on every successful
+  //   call so the impostor remembers what was said.
   //
   // Phase C — closed:
   //   Form hidden, KA BAND CLOSED banner shown. Resets when the active
   //   transmission flips.
 
-  const FIRST_RATE  = 0.25;          // each first-contact attempt
-  const FIRST_MAX   = 3;             // hard cap on first-contact sends
+  const FIRST_RATE  = 0.30;          // each first-contact attempt
+  const FIRST_MAX   = 5;             // hard cap on first-contact sends
   const FOLLOW_RATE = 0.50;          // first follow-up roll
   const FOLLOW_MAX  = 2;             // total follow-up sends; the 2nd is forced fail
   const FAIL_MODES = [
@@ -839,7 +842,7 @@
   ];
   const FAIL_TOTAL_WEIGHT = FAIL_MODES.reduce((s, m) => s + m.weight, 0);
 
-  const RESPOND_LS_KEY  = "respond:v2";          // bumped from v1 → wipes old shape on upgrade
+  const RESPOND_LS_KEY  = "respond:v3";          // bumped: state schema gained `conversation`
   const RECEIVER_LS_KEY = "kastaways:receiver_name";  // global, shared across transmissions
   const RESPOND_TYPE_MS = 26;
   const HANDLE_MIN_LEN  = 2;
@@ -860,6 +863,7 @@
       connectedName: null,
       usedNames: [],
       usedTopics: [],
+      conversation: [],       // [{role:"user"|"assistant", content:string}, ...]
       log: []
     };
   }
@@ -872,6 +876,8 @@
       try {
         const parsed = JSON.parse(raw);
         if (parsed && parsed.tid === tid && typeof parsed.phase === "string") {
+          // backfill any field added in a newer schema version
+          if (!Array.isArray(parsed.conversation)) parsed.conversation = [];
           return parsed;
         }
       } catch (_) { /* fall through to fresh */ }
@@ -928,27 +934,12 @@
   }
 
   function respondRenderAttemptsCounter() {
+    // The counter is intentionally left blank — we don't surface remaining
+    // attempts to the receiver. The only public state is "form available"
+    // vs "KA BAND CLOSED" (which the closed banner conveys directly).
     if (!respondAttemptsEl) return;
-    const phase = respondPhase();
-    if (phase === "closed") {
-      respondAttemptsEl.textContent = "BAND CLOSED";
-      respondAttemptsEl.dataset.state = "out";
-      return;
-    }
-    if (phase === "connected") {
-      // Remaining follow-ups counted as "messages left" — even though one of
-      // them will be a forced fail, we frame it as a message budget.
-      const left = Math.max(0, FOLLOW_MAX - respondState.followAttempts);
-      respondAttemptsEl.textContent = "CONNECTED · " + left + " MSG" + (left === 1 ? "" : "S") + " LEFT";
-      respondAttemptsEl.dataset.state = left <= 1 ? "low" : "ok";
-      return;
-    }
-    const n = Math.max(0, FIRST_MAX - respondState.firstAttempts);
-    respondAttemptsEl.textContent =
-      n + " ATTEMPT" + (n === 1 ? "" : "S") + " TO ESTABLISH UPLINK";
-    if (n <= 0)       respondAttemptsEl.dataset.state = "out";
-    else if (n === 1) respondAttemptsEl.dataset.state = "low";
-    else              respondAttemptsEl.dataset.state = "ok";
+    respondAttemptsEl.textContent = "";
+    delete respondAttemptsEl.dataset.state;
   }
 
   function respondHandleSet() {
@@ -1155,6 +1146,11 @@
   async function runSuccess(userText, isFollowUp) {
     await respondAnimateBarTo(72, 900 + Math.random() * 500, "TRANSMITTING...");
 
+    // The full conversation rides on every successful turn so the impostor
+    // remembers what's already been said. We send the prior turns ONLY (the
+    // current user message is the trailing payload).
+    const history = isFollowUp ? (respondState.conversation || []).slice(-6) : [];
+
     let payload = null;
     try {
       const res = await fetch("/api/respond", {
@@ -1164,6 +1160,7 @@
           message: userText,
           receiverName: respondReceiverName || "",
           connectedName: isFollowUp ? (respondState.connectedName || null) : null,
+          history: history,
           usedNames:  respondState.usedNames  || [],
           usedTopics: respondState.usedTopics || [],
           tid: respondState.tid
@@ -1197,6 +1194,16 @@
     }
     if (payload.topic && respondState.usedTopics.indexOf(payload.topic) === -1) {
       respondState.usedTopics.push(payload.topic);
+    }
+
+    // Append the just-completed exchange to the conversation buffer so the
+    // next follow-up call carries the entire back-and-forth as context.
+    if (!Array.isArray(respondState.conversation)) respondState.conversation = [];
+    respondState.conversation.push({ role: "user",      content: userText });
+    respondState.conversation.push({ role: "assistant", content: payload.reply });
+    // Cap the buffer (defense — should already be small given FOLLOW_MAX = 2).
+    if (respondState.conversation.length > 12) {
+      respondState.conversation = respondState.conversation.slice(-12);
     }
 
     return {
