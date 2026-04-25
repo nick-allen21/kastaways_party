@@ -67,6 +67,12 @@
   let activeBootPhaseResolver = null;
   let bootSkipped = false;
   let activeGlitchTimer = null;
+  // True while the transmission body is mid-typewriter (or hasn't started
+  // rendering yet). The respond form stays locked during this window so a
+  // panicked user can't type a name and fire a reply before they've
+  // actually read the message. Default true → form stays locked from
+  // script load until the first transmission render finishes.
+  let transmissionTyping = true;
 
   // ---------------------------------------------------------------
   // Selection logic
@@ -430,13 +436,24 @@
       !PREFERS_REDUCED_MOTION &&
       !hasBeenSeen(transmission.id);
 
-    if (shouldType) {
-      await typewrite(textNode, transmission.body, {
-        defaultMs: TYPEWRITER_DEFAULT_MS,
-        pacing: transmission.pacing || {}
-      });
-    } else {
-      textNode.textContent = transmission.body;
+    // Lock the reply form for the duration of the typewriter — including
+    // the name input — so the user has to actually read what KA is saying
+    // before they can write back. Instant renders flip the lock off
+    // immediately (nothing to wait for).
+    transmissionTyping = true;
+    respondApplyChannelState();
+
+    try {
+      if (shouldType) {
+        await typewrite(textNode, transmission.body, {
+          defaultMs: TYPEWRITER_DEFAULT_MS,
+          pacing: transmission.pacing || {}
+        });
+      } else {
+        textNode.textContent = transmission.body;
+      }
+    } finally {
+      transmissionTyping = false;
     }
 
     markSeen(transmission.id);
@@ -444,6 +461,11 @@
 
     if (respondActiveTid !== transmission.id) {
       respondResetForTransmission(transmission.id);
+    } else {
+      // Same transmission re-rendered (e.g. instant rerender after a
+      // visibility flip). Re-evaluate channel state so the typing-lock
+      // gets cleared.
+      respondApplyChannelState();
     }
 
     updateSignalLogActive();
@@ -700,8 +722,8 @@
   //   successful call so the impostor remembers what was said.
   //
   // Phase C — closed:
-  //   Form hidden, KA BAND CLOSED banner shown. Resets when the active
-  //   transmission flips.
+  //   Form hidden, "TRANSMISSION ENDED" banner shown. Resets when the
+  //   active transmission flips.
 
   const FIRST_RATE  = 0.30;          // each first-contact attempt
   const FIRST_MAX   = 3;             // hard cap on first-contact sends
@@ -824,7 +846,7 @@
   function respondRenderAttemptsCounter() {
     // The counter is intentionally left blank — we don't surface remaining
     // attempts to the receiver. The only public state is "form available"
-    // vs "KA BAND CLOSED" (which the closed banner conveys directly).
+    // vs "TRANSMISSION ENDED" (which the closed banner conveys directly).
     if (!respondAttemptsEl) return;
     respondAttemptsEl.textContent = "";
     delete respondAttemptsEl.dataset.state;
@@ -839,21 +861,28 @@
     const phase = respondPhase();
     const closed = phase === "closed";
     const nameOk = respondHandleSet();
-    const allowSend = !closed && !respondInFlight && nameOk;
     const nameLocked = respondNameLocked();
+    const typing = transmissionTyping;
+    const allowSend = !closed && !respondInFlight && nameOk && !typing;
 
     respondEl.dataset.closed = closed ? "true" : "false";
     respondEl.dataset.phase  = phase;
     respondEl.dataset.handle = nameOk ? "set" : "unset";
+    respondEl.dataset.typing = typing ? "true" : "false";
     if (respondClosedEl) respondClosedEl.hidden = !closed;
 
     // After the first submit the receiver never sees the NAME row again —
     // the persisted handle just rides on every API call silently.
     if (respondHandleRowEl) respondHandleRowEl.hidden = nameLocked;
+    // Name input also locks during the typewriter so the user can't
+    // pre-fill it before they've finished reading the transmission.
+    if (respondHandleEl) respondHandleEl.disabled = typing || closed;
 
     if (respondInputEl) {
       respondInputEl.disabled = !allowSend;
-      if (!nameOk) {
+      if (typing) {
+        respondInputEl.placeholder = "stand by · transmission incoming...";
+      } else if (!nameOk) {
         respondInputEl.placeholder = "enter your name above first ↑";
       } else {
         respondInputEl.placeholder = phase === "first"
@@ -1302,6 +1331,11 @@
     }
 
     respondEl?.addEventListener("click", (e) => e.stopPropagation());
+
+    // Sync the form's disabled state to the initial transmissionTyping=true.
+    // Until the first transmission render flips that flag, every input is
+    // disabled regardless of whether the receiver has a persisted name.
+    respondApplyChannelState();
   }
 
   // ---------------------------------------------------------------
