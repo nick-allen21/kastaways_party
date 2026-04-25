@@ -528,53 +528,14 @@ a { color: var(--green); }
   50%      { transform: translateX(-2px); }
 }
 
-.respond__handle:disabled {
-  color: var(--green);
-  opacity: 0.85;
-  cursor: default;
-}
-
 .respond__handle::placeholder {
   color: var(--green-faint);
   opacity: 0.8;
 }
 
-.respond__handle-save {
-  flex: 0 0 auto;
-  background: none;
-  border: 1px solid var(--green-dim);
-  color: var(--green);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 5px 10px;
-  cursor: pointer;
-  transition: border-color 0.12s ease, background 0.12s ease;
-}
-
-.respond__handle-save:hover,
-.respond__handle-save:focus-visible {
-  border-color: var(--green);
-  background: rgba(74, 226, 144, 0.08);
-  outline: none;
-}
-
-.respond__handle-save:disabled {
-  color: var(--green-faint);
-  border-color: var(--green-faint);
-  cursor: not-allowed;
-}
-
 .respond[data-handle="set"] .respond__handle-row {
   border-style: solid;
   border-color: var(--green-faint);
-  opacity: 0.85;
-}
-
-.respond[data-handle="set"] .respond__handle-save {
-  /* turns into an EDIT toggle once locked */
-  border-style: dashed;
 }
 
 .respond__handle-help {
@@ -787,10 +748,7 @@ a { color: var(--green); }
   .respond__attempts { font-size: 10px; }
   .respond__row { flex-wrap: wrap; gap: 8px; }
   .respond__send { width: 100%; padding: 10px 12px; }
-  .respond__handle-row { flex-wrap: wrap; gap: 6px 8px; }
-  .respond__handle { flex-basis: 100%; order: 2; }
-  .respond__handle-label { order: 1; }
-  .respond__handle-save { order: 3; margin-left: auto; }
+  .respond__handle-row { gap: 8px; }
 }
 
 /* ------------------------------------------------------------------

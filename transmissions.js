@@ -1,4 +1,4 @@
-// KA-026 transmission log (v6).
+// 664.LOMITA.CT.94305 transmission log (v6).
 // Each transmission `dropAt` is in PT (-07:00 covers the entire run; no DST flip).
 // `body` is rendered exactly as written (whitespace + line breaks preserved, typewriter character-by-character).
 // `pacing` is an optional map: bodyLineIdx -> { ms, pauseAfter } overriding default typewriter rhythm.

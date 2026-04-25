@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>KA-026 · SHORTWAVE MONITOR</title>
-  <meta name="description" content="Incoming distress signal from Flight KA-026. Stranded survivors, intermittent transmission." />
+  <title>664.LOMITA.CT.94305 · SHORTWAVE MONITOR</title>
+  <meta name="description" content="Incoming distress signal from 664.LOMITA.CT.94305. Stranded survivors, intermittent transmission." />
 
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="KA-026 · SIGNAL ACTIVE" />
+  <meta property="og:title" content="664.LOMITA.CT.94305 · SIGNAL ACTIVE" />
   <meta property="og:description" content="Incoming distress signal. Stand by." />
   <meta property="og:url" content="https://kastaway.party" />
   <meta name="theme-color" content="#000000" />
@@ -28,7 +28,7 @@
   <div class="signal-loss" id="signal-loss" aria-hidden="true"></div>
 
   <header class="topbar" role="banner">
-    <span class="topbar__id">KAPPA ALPHA · SHORTWAVE MONITOR · KA-026</span>
+    <span class="topbar__id">KAPPA ALPHA · SHORTWAVE MONITOR · IP 664.LOMITA.CT.94305</span>
     <span class="topbar__status" id="signal-status">
       <span class="dot" id="signal-dot" aria-hidden="true"></span>
       <span class="topbar__status-label" id="signal-status-label">SIGNAL STATUS: ACTIVE</span>
@@ -59,7 +59,7 @@
       <pre class="transmission__body" id="transmission-body"><span class="cursor" id="cursor">█</span></pre>
     </div>
 
-    <section class="respond" id="respond" aria-label="Respond to KA-026">
+    <section class="respond" id="respond" aria-label="Respond to 664.LOMITA.CT.94305">
       <div class="respond__header">
         <span class="respond__title">› TRANSMIT REPLY</span>
         <span class="respond__attempts" id="respond-attempts">3 ATTEMPTS REMAINING</span>
@@ -69,26 +69,21 @@
 
       <form class="respond__form" id="respond-form" autocomplete="off">
         <div class="respond__handle-row" id="respond-handle-row">
-          <label class="respond__handle-label" for="respond-handle">HANDLE ›</label>
+          <label class="respond__handle-label" for="respond-handle">NAME ›</label>
           <input
             class="respond__handle"
             id="respond-handle"
-            name="handle"
+            name="name"
             type="text"
             maxlength="24"
-            autocomplete="off"
+            autocomplete="given-name"
             spellcheck="false"
-            placeholder="who is receiving?"
+            placeholder="your name here"
             aria-describedby="respond-handle-help"
           />
-          <button
-            class="respond__handle-save"
-            id="respond-handle-save"
-            type="button"
-          >[ LOCK IN ]</button>
         </div>
         <p class="respond__handle-help" id="respond-handle-help" hidden>
-          your handle is broadcast with every transmit. ka can hear it.
+          your name is broadcast with every transmit. ka can hear it.
         </p>
 
         <label class="respond__srlabel" for="respond-input">Reply text</label>

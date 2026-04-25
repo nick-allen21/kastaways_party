@@ -17,7 +17,7 @@
   const BOOT_PHASES = [
     { label: "ESTABLISHING SIGNAL...",     barMs: 800 },
     { label: "SCANNING FREQUENCIES...",    barMs: 850 },
-    { label: "LOCKING SOURCE: KA-026",     barMs: 750 },
+    { label: "LOCKING SOURCE: 664.LOMITA.CT.94305", barMs: 750 },
     { label: "DECRYPTING TRANSMISSION...", barMs: 900 }
   ];
   const BOOT_BAR_CELLS = 18;
@@ -67,7 +67,6 @@
   const respondClosedEl  = $("respond-closed");
   const respondHandleRowEl  = $("respond-handle-row");
   const respondHandleEl     = $("respond-handle");
-  const respondHandleSaveEl = $("respond-handle-save");
 
   // ---- State ----
   let activeTypewriterTimer = null;
@@ -953,44 +952,32 @@
   }
 
   function respondHandleSet() {
-    return !!respondReceiverName;
-  }
-
-  function respondRenderHandleRow() {
-    if (!respondEl) return;
-    if (respondHandleSet()) {
-      respondEl.dataset.handle = "set";
-      if (respondHandleEl) {
-        respondHandleEl.value = respondReceiverName;
-        respondHandleEl.disabled = true;
-      }
-      if (respondHandleSaveEl) respondHandleSaveEl.textContent = "[ EDIT ]";
-    } else {
-      respondEl.dataset.handle = "unset";
-      if (respondHandleEl)     respondHandleEl.disabled = false;
-      if (respondHandleSaveEl) respondHandleSaveEl.textContent = "[ LOCK IN ]";
-    }
+    return !!(respondReceiverName && respondReceiverName.length >= HANDLE_MIN_LEN);
   }
 
   function respondApplyChannelState() {
     if (!respondEl) return;
     const phase = respondPhase();
     const closed = phase === "closed";
-    const allowSend = !closed && !respondInFlight && respondHandleSet();
+    const nameOk = respondHandleSet();
+    const allowSend = !closed && !respondInFlight && nameOk;
 
     respondEl.dataset.closed = closed ? "true" : "false";
     respondEl.dataset.phase  = phase;
+    respondEl.dataset.handle = nameOk ? "set" : "unset";
     if (respondClosedEl) respondClosedEl.hidden = !closed;
 
     if (respondInputEl) {
       respondInputEl.disabled = !allowSend;
-      respondInputEl.placeholder = phase === "first"
-        ? "hello? are you out there?"
-        : "static crackles. say something to keep them on the line...";
+      if (!nameOk) {
+        respondInputEl.placeholder = "enter your name above first ↑";
+      } else {
+        respondInputEl.placeholder = phase === "first"
+          ? "hello? are you out there?"
+          : "static crackles. say something to keep them on the line...";
+      }
     }
     if (respondSendEl)   respondSendEl.disabled = !allowSend;
-
-    respondRenderHandleRow();
   }
 
   function respondUpdateCounter() {
@@ -1101,13 +1088,13 @@
   }
 
   async function failNoCarrier() {
-    await respondAnimateBarTo(8, 240, "DIALING KA-026...");
-    respondBarSet("fail-no-carrier", "NO CARRIER · KA-026 OFFLINE", 8);
+    await respondAnimateBarTo(8, 240, "DIALING 664.LOMITA.CT.94305...");
+    respondBarSet("fail-no-carrier", "NO CARRIER · 664.LOMITA.CT.94305 OFFLINE", 8);
     await wait(900);
     return {
       meta: "FAILED · NO CARRIER",
       kind: "fail",
-      text: "→ NO CARRIER. KA-026 IS NOT BROADCASTING."
+      text: "→ NO CARRIER. 664.LOMITA.CT.94305 IS NOT BROADCASTING."
     };
   }
 
@@ -1216,7 +1203,7 @@
       success: true,
       name: payload.name,
       entry: {
-        meta: "KA-026 / " + payload.name.toUpperCase(),
+        meta: "664.LOMITA.CT.94305 / " + payload.name.toUpperCase(),
         kind: "recv",
         text: payload.reply
       }
@@ -1251,8 +1238,9 @@
     if (e) e.preventDefault();
     if (respondInFlight || respondIsClosed() || !respondState) return;
     if (!respondHandleSet()) {
-      respondInputEl?.focus();
       respondHandleEl?.focus();
+      respondHandleEl?.classList.add("respond__handle--err");
+      setTimeout(() => respondHandleEl?.classList.remove("respond__handle--err"), 800);
       return;
     }
 
@@ -1360,29 +1348,16 @@
   }
 
   // -- handle (receiver name) --------------------------------------------
+  // No explicit lock-in button: as the receiver types their name, we sanitize
+  // and persist it on every keystroke, then re-derive the channel-enabled
+  // state. Once the cleaned value crosses HANDLE_MIN_LEN, the textarea +
+  // TRANSMIT button unlock automatically.
 
-  function respondCommitHandle() {
+  function respondOnHandleInput() {
     if (!respondHandleEl) return;
     const cleaned = sanitizeHandle(respondHandleEl.value);
-    if (cleaned.length < HANDLE_MIN_LEN) {
-      respondHandleEl.focus();
-      respondHandleEl.classList.add("respond__handle--err");
-      setTimeout(() => respondHandleEl?.classList.remove("respond__handle--err"), 800);
-      return;
-    }
-    respondReceiverName = cleaned;
-    respondSaveReceiverName(cleaned);
-    respondApplyChannelState();
-    respondInputEl?.focus();
-  }
-
-  function respondEditHandle() {
-    if (!respondHandleEl) return;
-    respondReceiverName = null;
-    respondSaveReceiverName(null);
-    respondHandleEl.disabled = false;
-    respondHandleEl.focus();
-    respondHandleEl.select?.();
+    respondReceiverName = cleaned.length >= HANDLE_MIN_LEN ? cleaned : null;
+    respondSaveReceiverName(respondReceiverName);
     respondApplyChannelState();
   }
 
@@ -1397,17 +1372,14 @@
     respondFormEl.addEventListener("submit", respondHandleSubmit);
 
     if (respondHandleEl) {
+      respondHandleEl.addEventListener("input", respondOnHandleInput);
+      respondHandleEl.addEventListener("blur", respondOnHandleInput);
       respondHandleEl.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
-          respondCommitHandle();
+          respondOnHandleInput();
+          if (respondHandleSet()) respondInputEl?.focus();
         }
-      });
-    }
-    if (respondHandleSaveEl) {
-      respondHandleSaveEl.addEventListener("click", () => {
-        if (respondHandleSet()) respondEditHandle();
-        else                    respondCommitHandle();
       });
     }
 
