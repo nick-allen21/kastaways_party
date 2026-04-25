@@ -719,7 +719,7 @@
     setTimeout(() => {
       if (bodyEl && bodyEl.dataset.glitch === "rgb") delete bodyEl.dataset.glitch;
       if (headerEl && headerEl.dataset.glitch === "rgb") delete headerEl.dataset.glitch;
-    }, 200);
+    }, 290);
   }
 
   function fireGlitchSlip() {
@@ -727,7 +727,7 @@
     terminalEl.dataset.glitch = "slip";
     setTimeout(() => {
       if (terminalEl && terminalEl.dataset.glitch === "slip") delete terminalEl.dataset.glitch;
-    }, 180);
+    }, 270);
   }
 
   function fireGlitchLoss() {
@@ -737,12 +737,13 @@
     signalLossEl.dataset.active = "true";
     setTimeout(() => {
       if (signalLossEl) signalLossEl.dataset.active = "false";
-    }, 150);
+    }, 230);
   }
 
   function fireGlitchStutter() {
     fireGlitchRgb();
-    setTimeout(fireGlitchSlip, 90);
+    setTimeout(fireGlitchSlip, 140);
+    setTimeout(fireGlitchLoss, 280);
   }
 
   function fireRandomGlitch() {
@@ -766,13 +767,13 @@
       if (document.visibilityState === "visible") {
         fireRandomGlitch();
       }
-      scheduleNextGlitch(8000, 22000);
+      scheduleNextGlitch(8000, 15000);
     }, wait);
   }
 
   function startGlitchLoop() {
     if (PREFERS_REDUCED_MOTION) return;
-    scheduleNextGlitch(3500, 6500);
+    scheduleNextGlitch(2500, 5000);
   }
 
   // Debug hook: window.__glitch("rgb"|"slip"|"loss"|"stutter") to fire on demand.
