@@ -54,6 +54,18 @@
   const signalLossEl = $("signal-loss");
   const terminalEl = $("terminal");
 
+  const respondEl        = $("respond");
+  const respondFormEl    = $("respond-form");
+  const respondInputEl   = $("respond-input");
+  const respondSendEl    = $("respond-send");
+  const respondCounterEl = $("respond-counter");
+  const respondBarEl     = $("respond-bar");
+  const respondBarFillEl = $("respond-bar-fill");
+  const respondBarStatusEl = $("respond-bar-status");
+  const respondAttemptsEl = $("respond-attempts");
+  const respondLogEl     = $("respond-log");
+  const respondClosedEl  = $("respond-closed");
+
   // ---- State ----
   let activeTypewriterTimer = null;
   let currentRenderedId = null;
@@ -544,6 +556,10 @@
     markSeen(transmission.id);
     currentRenderedId = transmission.id;
 
+    if (respondActiveTid !== transmission.id) {
+      respondResetForTransmission(transmission.id);
+    }
+
     updateSignalLogActive();
   }
 
@@ -788,6 +804,453 @@
   };
 
   // ---------------------------------------------------------------
+  // Respond / KA band (v14)
+  // ---------------------------------------------------------------
+  // Per-transmission state, persisted in localStorage so a refresh doesn't
+  // reset the user's attempts. State is keyed by transmission id, so when a
+  // new T drops the channel resets to 3 attempts naturally.
+  //
+  // Probability ladder (per attempt index, 0-based):
+  //   attempt 0 (first send)   → 20% success
+  //   attempt 1 (second send)  → 50% success
+  //   attempt 2 (third send)   → 0%  success (guaranteed cutoff)
+  //
+  // Failure modes are weighted-randomly picked when the gate fails; each
+  // renders a different bar animation + log entry so different users see
+  // different "what went wrong" beats.
+
+  const RESPOND_MAX_ATTEMPTS = 3;
+  const SUCCESS_RATES = [0.20, 0.50, 0.00];
+  const FAIL_MODES = [
+    { id: "mid-stall",     weight: 4 },
+    { id: "no-carrier",    weight: 2 },
+    { id: "ghost",         weight: 2 },
+    { id: "corrupt",       weight: 2 }
+  ];
+  const FAIL_TOTAL_WEIGHT = FAIL_MODES.reduce((s, m) => s + m.weight, 0);
+
+  const RESPOND_LS_KEY = "respond:v1";
+  const RESPOND_TYPE_MS = 26;
+
+  let respondActiveTid = null;       // transmission id this state belongs to
+  let respondState = null;           // { tid, attempts, usedNames, usedTopics, log[] }
+  let respondInFlight = false;
+  let respondBarTimer = null;
+
+  function respondLoadState(tid) {
+    let raw = null;
+    try { raw = localStorage.getItem(RESPOND_LS_KEY); } catch (_) { /* noop */ }
+
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.tid === tid) return parsed;
+      } catch (_) { /* fall through to fresh */ }
+    }
+
+    return { tid: tid, attempts: 0, usedNames: [], usedTopics: [], log: [] };
+  }
+
+  function respondSaveState() {
+    try {
+      localStorage.setItem(RESPOND_LS_KEY, JSON.stringify(respondState));
+    } catch (_) { /* noop */ }
+  }
+
+  function respondResetForTransmission(tid) {
+    respondActiveTid = tid;
+    respondState = respondLoadState(tid);
+    respondInFlight = false;
+    respondBarHide();
+    respondRenderLog();
+    respondRenderAttemptsCounter();
+    respondApplyChannelState();
+    if (respondInputEl) respondInputEl.value = "";
+    respondUpdateCounter();
+  }
+
+  function respondRemainingAttempts() {
+    if (!respondState) return RESPOND_MAX_ATTEMPTS;
+    return Math.max(0, RESPOND_MAX_ATTEMPTS - respondState.attempts);
+  }
+
+  function respondIsClosed() {
+    return respondRemainingAttempts() <= 0;
+  }
+
+  function respondRenderAttemptsCounter() {
+    if (!respondAttemptsEl) return;
+    const n = respondRemainingAttempts();
+    respondAttemptsEl.textContent =
+      n + " ATTEMPT" + (n === 1 ? "" : "S") + " REMAINING";
+    if (n <= 0)      respondAttemptsEl.dataset.state = "out";
+    else if (n === 1) respondAttemptsEl.dataset.state = "low";
+    else              respondAttemptsEl.dataset.state = "ok";
+  }
+
+  function respondApplyChannelState() {
+    if (!respondEl) return;
+    if (respondIsClosed()) {
+      respondEl.dataset.closed = "true";
+      if (respondClosedEl) respondClosedEl.hidden = false;
+      if (respondInputEl)  respondInputEl.disabled = true;
+      if (respondSendEl)   respondSendEl.disabled  = true;
+    } else {
+      respondEl.dataset.closed = "false";
+      if (respondClosedEl) respondClosedEl.hidden = true;
+      if (respondInputEl)  respondInputEl.disabled = respondInFlight;
+      if (respondSendEl)   respondSendEl.disabled  = respondInFlight;
+    }
+  }
+
+  function respondUpdateCounter() {
+    if (!respondInputEl || !respondCounterEl) return;
+    const len = respondInputEl.value.length;
+    respondCounterEl.textContent = len + "/140";
+    respondCounterEl.dataset.state = len > 120 ? "warn" : "ok";
+  }
+
+  // -- log rendering ---------------------------------------------------
+
+  function respondRenderLog() {
+    if (!respondLogEl || !respondState) return;
+    respondLogEl.innerHTML = "";
+    respondState.log.forEach((entry) => respondAppendLogDom(entry, { instant: true }));
+  }
+
+  function respondAppendLogDom(entry, opts) {
+    if (!respondLogEl) return null;
+    opts = opts || {};
+    const li = document.createElement("li");
+    li.className = "respond__entry";
+    li.dataset.kind = entry.kind;
+
+    const meta = document.createElement("span");
+    meta.className = "respond__entry-meta";
+    meta.textContent = entry.meta || "";
+    li.appendChild(meta);
+
+    const body = document.createElement("span");
+    body.className = "respond__entry-body";
+    body.textContent = opts.instant ? (entry.text || "") : "";
+    li.appendChild(body);
+
+    respondLogEl.appendChild(li);
+    return { li: li, body: body };
+  }
+
+  function respondPushLog(entry, opts) {
+    opts = opts || {};
+    respondState.log.push(entry);
+    respondSaveState();
+    return respondAppendLogDom(entry, opts);
+  }
+
+  // -- send bar animator ----------------------------------------------
+
+  function respondBarHide() {
+    if (!respondBarEl) return;
+    if (respondBarTimer) {
+      clearInterval(respondBarTimer);
+      respondBarTimer = null;
+    }
+    delete respondBarEl.dataset.state;
+    if (respondBarFillEl)   respondBarFillEl.style.width = "0%";
+    if (respondBarStatusEl) respondBarStatusEl.textContent = "";
+  }
+
+  function respondBarSet(state, label, pct) {
+    if (!respondBarEl) return;
+    respondBarEl.dataset.state = state;
+    if (respondBarFillEl)   respondBarFillEl.style.width = (pct == null ? 100 : pct) + "%";
+    if (respondBarStatusEl) respondBarStatusEl.textContent = label;
+  }
+
+  function respondAnimateBarTo(targetPct, totalMs, label) {
+    return new Promise((resolve) => {
+      if (!respondBarEl) { resolve(); return; }
+      respondBarEl.dataset.state = "sending";
+      if (respondBarStatusEl) respondBarStatusEl.textContent = label;
+      const startWidth = parseFloat(respondBarFillEl?.style.width || "0") || 0;
+      const startTs = performance.now();
+
+      if (respondBarTimer) clearInterval(respondBarTimer);
+
+      function step() {
+        const t = Math.min(1, (performance.now() - startTs) / totalMs);
+        const eased = t; // linear works fine for this aesthetic
+        const w = startWidth + (targetPct - startWidth) * eased;
+        if (respondBarFillEl) respondBarFillEl.style.width = w.toFixed(2) + "%";
+        if (t >= 1) {
+          clearInterval(respondBarTimer);
+          respondBarTimer = null;
+          resolve();
+        }
+      }
+
+      respondBarTimer = setInterval(step, 30);
+    });
+  }
+
+  // -- failure mode renderers -----------------------------------------
+  //
+  // Each returns a Promise that resolves once the bar finishes its sequence.
+  // After resolve, the caller appends the corresponding log entry.
+
+  async function failMidStall() {
+    const stallAt = 30 + Math.random() * 50; // stall between 30% and 80%
+    await respondAnimateBarTo(stallAt, 600 + Math.random() * 700, "TRANSMITTING...");
+    await wait(450);
+    respondBarSet("fail-stall", "PACKET LOSS · TRANSMISSION DROPPED", stallAt);
+    await wait(900);
+    return {
+      meta: "FAILED · " + Math.round(stallAt) + "% SENT",
+      kind: "fail",
+      text: "→ PACKET LOSS. TRANSMISSION DROPPED."
+    };
+  }
+
+  async function failNoCarrier() {
+    await respondAnimateBarTo(8, 240, "DIALING KA-026...");
+    respondBarSet("fail-no-carrier", "NO CARRIER · KA-026 OFFLINE", 8);
+    await wait(900);
+    return {
+      meta: "FAILED · NO CARRIER",
+      kind: "fail",
+      text: "→ NO CARRIER. KA-026 IS NOT BROADCASTING."
+    };
+  }
+
+  async function failGhost() {
+    await respondAnimateBarTo(100, 1000 + Math.random() * 400, "TRANSMITTING...");
+    respondBarSet("sending", "DELIVERED", 100);
+    await wait(600);
+    respondBarSet("fail-stall", "NO REPLY · LISTENING...", 100);
+    await wait(1400);
+    return {
+      meta: "DELIVERED · NO REPLY",
+      kind: "fail-ghost",
+      text: "(no reply. only static.)"
+    };
+  }
+
+  async function failCorrupt() {
+    await respondAnimateBarTo(100, 900 + Math.random() * 400, "TRANSMITTING...");
+    respondBarSet("fail-stall", "REPLY CORRUPTED · UNREADABLE", 100);
+    await wait(900);
+    return {
+      meta: "REPLY RECEIVED · CORRUPTED",
+      kind: "fail",
+      text: "→ ░░ ?? █▒░ R▚CV F▞IL · BYTES SCRA▓BLED"
+    };
+  }
+
+  function pickFailMode(forcedId) {
+    if (forcedId) {
+      const found = FAIL_MODES.find((m) => m.id === forcedId);
+      if (found) return found.id;
+    }
+    let r = Math.random() * FAIL_TOTAL_WEIGHT;
+    for (let i = 0; i < FAIL_MODES.length; i++) {
+      r -= FAIL_MODES[i].weight;
+      if (r <= 0) return FAIL_MODES[i].id;
+    }
+    return FAIL_MODES[0].id;
+  }
+
+  async function runFailMode(modeId) {
+    switch (modeId) {
+      case "no-carrier": return failNoCarrier();
+      case "ghost":      return failGhost();
+      case "corrupt":    return failCorrupt();
+      case "mid-stall":
+      default:           return failMidStall();
+    }
+  }
+
+  // -- success path: animate bar full, fetch /api/respond, typewrite reply ---
+
+  async function runSuccess(userText) {
+    await respondAnimateBarTo(72, 900 + Math.random() * 500, "TRANSMITTING...");
+
+    let payload = null;
+    try {
+      const res = await fetch("/api/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userText,
+          usedNames:  respondState.usedNames  || [],
+          usedTopics: respondState.usedTopics || [],
+          tid: respondState.tid
+        })
+      });
+      if (!res.ok) throw new Error("api " + res.status);
+      payload = await res.json();
+      if (!payload || !payload.reply || !payload.name) {
+        throw new Error("api: malformed");
+      }
+    } catch (err) {
+      // API failed mid-success — degrade gracefully into a corrupt-receive failure
+      // instead of awarding the success. This ensures we never commit to a
+      // success in localStorage and then have nothing to show.
+      console.warn("[respond] api failed, falling back to corrupt:", err && err.message);
+      await respondAnimateBarTo(100, 350, "TRANSMITTING...");
+      respondBarSet("fail-stall", "REPLY CORRUPTED · UNREADABLE", 100);
+      await wait(900);
+      return {
+        success: false,
+        entry: {
+          meta: "REPLY RECEIVED · CORRUPTED",
+          kind: "fail",
+          text: "→ ░░ ?? █▒░ R▚CV F▞IL · SIGNAL LOST"
+        }
+      };
+    }
+
+    await respondAnimateBarTo(100, 350, "TRANSMITTING...");
+    respondBarSet("success", "REPLY RECEIVED", 100);
+
+    // Bookkeep server's chosen name + topic so we don't repeat them.
+    if (payload.name && respondState.usedNames.indexOf(payload.name) === -1) {
+      respondState.usedNames.push(payload.name);
+    }
+    if (payload.topic && respondState.usedTopics.indexOf(payload.topic) === -1) {
+      respondState.usedTopics.push(payload.topic);
+    }
+
+    return {
+      success: true,
+      entry: {
+        meta: "KA-026 / " + payload.name.toUpperCase(),
+        kind: "recv",
+        text: payload.reply
+      }
+    };
+  }
+
+  // -- typewrite a recv entry into the live log -----------------------
+
+  function respondTypewriteEntry(domHandle, text) {
+    return new Promise((resolve) => {
+      if (!domHandle || !domHandle.body) { resolve(); return; }
+      if (PREFERS_REDUCED_MOTION) {
+        domHandle.body.textContent = text;
+        resolve();
+        return;
+      }
+      let i = 0;
+      domHandle.body.textContent = "";
+      function step() {
+        if (i >= text.length) { resolve(); return; }
+        domHandle.body.textContent += text.charAt(i);
+        i++;
+        setTimeout(step, RESPOND_TYPE_MS);
+      }
+      step();
+    });
+  }
+
+  // -- main submit handler --------------------------------------------
+
+  async function respondHandleSubmit(e) {
+    if (e) e.preventDefault();
+    if (respondInFlight || respondIsClosed() || !respondState) return;
+
+    const userText = (respondInputEl?.value || "").trim().slice(0, 140);
+    if (userText.length === 0) {
+      respondInputEl?.focus();
+      return;
+    }
+
+    respondInFlight = true;
+    if (respondInputEl) respondInputEl.disabled = true;
+    if (respondSendEl)  respondSendEl.disabled  = true;
+
+    // Log the outgoing line immediately so the user sees their own send.
+    respondPushLog(
+      { meta: "› YOU", kind: "sent", text: userText },
+      { instant: true }
+    );
+
+    if (respondInputEl) respondInputEl.value = "";
+    respondUpdateCounter();
+
+    const attemptIdx = respondState.attempts;
+    respondState.attempts = attemptIdx + 1;
+    respondSaveState();
+    respondRenderAttemptsCounter();
+
+    // Allow QA forcing via ?fail=<mode> / ?force=success
+    const params = new URLSearchParams(window.location.search);
+    const forceMode = params.get("force"); // "success"
+    const forceFail = params.get("fail");  // mid-stall|no-carrier|ghost|corrupt
+
+    let succeeded = false;
+    if (forceMode === "success") {
+      succeeded = true;
+    } else if (forceFail) {
+      succeeded = false;
+    } else {
+      const rate = SUCCESS_RATES[Math.min(attemptIdx, SUCCESS_RATES.length - 1)];
+      succeeded = Math.random() < rate;
+    }
+
+    respondBarSet("sending", "ESTABLISHING UPLINK...", 0);
+
+    let entry;
+    try {
+      if (succeeded) {
+        const result = await runSuccess(userText);
+        entry = result.entry;
+        if (result.success) {
+          const handle = respondPushLog(entry, { instant: false });
+          await respondTypewriteEntry(handle, entry.text);
+        } else {
+          respondPushLog(entry, { instant: true });
+        }
+      } else {
+        const modeId = pickFailMode(forceFail);
+        entry = await runFailMode(modeId);
+        respondPushLog(entry, { instant: true });
+      }
+    } catch (err) {
+      console.error("[respond] unexpected error:", err);
+      respondPushLog(
+        { meta: "FAILED · UNKNOWN ERROR", kind: "fail", text: "→ TRANSMISSION FAILED. UNKNOWN." },
+        { instant: true }
+      );
+    }
+
+    await wait(900);
+    respondBarHide();
+
+    respondInFlight = false;
+    respondApplyChannelState();
+  }
+
+  function respondInit() {
+    if (!respondFormEl) return;
+
+    respondFormEl.addEventListener("submit", respondHandleSubmit);
+
+    if (respondInputEl) {
+      respondInputEl.addEventListener("input", respondUpdateCounter);
+      respondInputEl.addEventListener("keydown", (e) => {
+        // Cmd/Ctrl+Enter sends; plain Enter inserts a newline (textarea default).
+        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          respondHandleSubmit(e);
+        }
+      });
+    }
+
+    // Stop tap-to-skip-boot/typewriter handler from swallowing focus when the
+    // user clicks inside the form.
+    respondEl?.addEventListener("click", (e) => e.stopPropagation());
+  }
+
+  // ---------------------------------------------------------------
   // Init
   // ---------------------------------------------------------------
 
@@ -809,10 +1272,13 @@
 
     signalLogToggleEl.addEventListener("click", toggleSignalLog);
 
+    respondInit();
+
     document.addEventListener(
       "click",
       (e) => {
         if (e.target.closest(".signal-log")) return;
+        if (e.target.closest(".respond")) return;
         if (window.__skipBoot) {
           window.__skipBoot();
         }

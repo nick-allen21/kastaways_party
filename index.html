@@ -59,6 +59,41 @@
       <pre class="transmission__body" id="transmission-body"><span class="cursor" id="cursor">█</span></pre>
     </div>
 
+    <section class="respond" id="respond" aria-label="Respond to KA-026">
+      <div class="respond__header">
+        <span class="respond__title">› TRANSMIT REPLY</span>
+        <span class="respond__attempts" id="respond-attempts">3 ATTEMPTS REMAINING</span>
+      </div>
+
+      <ul class="respond__log" id="respond-log" aria-live="polite"></ul>
+
+      <form class="respond__form" id="respond-form" autocomplete="off">
+        <label class="respond__srlabel" for="respond-input">Reply text</label>
+        <textarea
+          class="respond__input"
+          id="respond-input"
+          name="message"
+          rows="2"
+          maxlength="140"
+          placeholder="hello? are you out there?"
+          aria-describedby="respond-counter"
+        ></textarea>
+        <div class="respond__row">
+          <span class="respond__counter" id="respond-counter">0/140</span>
+          <button class="respond__send" id="respond-send" type="submit">[ TRANSMIT ]</button>
+        </div>
+        <div class="respond__bar" id="respond-bar" aria-hidden="true">
+          <span class="respond__bar-fill" id="respond-bar-fill"></span>
+          <span class="respond__bar-status" id="respond-bar-status"></span>
+        </div>
+      </form>
+
+      <div class="respond__closed" id="respond-closed" hidden>
+        <div class="respond__closed-title">KA BAND CLOSED</div>
+        <div class="respond__closed-sub">RETRY WHEN NEXT SIGNAL DROPS</div>
+      </div>
+    </section>
+
     <section class="rations" id="rations" aria-label="Rations log">
       <div class="rations__title">RATIONS LOG</div>
       <div class="rations__rule">─────────────────────────────</div>
