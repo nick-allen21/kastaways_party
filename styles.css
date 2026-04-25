@@ -249,6 +249,87 @@ a { color: var(--green); }
 }
 
 /* ------------------------------------------------------------------
+   Crew manifest
+------------------------------------------------------------------ */
+
+.manifest {
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--green-faint);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--green-dim);
+}
+
+.manifest__header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+}
+
+.manifest__title { color: var(--green-dim); }
+
+.manifest__rule {
+  color: var(--green-faint);
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  flex: 1 1 auto;
+}
+
+.manifest__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+.manifest__row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.manifest__name {
+  flex: 0 0 auto;
+  width: 11ch;
+  color: var(--green-dim);
+  text-transform: uppercase;
+}
+
+.manifest__dots {
+  flex: 1 1 auto;
+  color: var(--green-faint);
+  overflow: hidden;
+  white-space: nowrap;
+  letter-spacing: 0.1em;
+}
+
+.manifest__status {
+  flex: 0 0 auto;
+  color: var(--green);
+  text-transform: uppercase;
+  text-align: right;
+}
+
+.manifest__row[data-critical="true"] .manifest__status {
+  color: var(--amber);
+}
+
+.manifest__row[data-redacted="true"] .manifest__status {
+  color: var(--red);
+  text-shadow: 0 0 4px rgba(229, 62, 62, 0.4);
+}
+
+/* ------------------------------------------------------------------
    Countdown
 ------------------------------------------------------------------ */
 
@@ -404,6 +485,15 @@ a { color: var(--green); }
   .countdown { margin-top: 36px; }
 
   .signal-log { margin-top: 40px; }
+
+  .manifest {
+    margin-top: 32px;
+    font-size: 12px;
+  }
+
+  .manifest__name { width: 10ch; }
+
+  .manifest__rule { display: none; }
 }
 
 /* ------------------------------------------------------------------

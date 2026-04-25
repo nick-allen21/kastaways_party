@@ -31,6 +31,8 @@
   const signalLogToggleEl = $("signal-log-toggle");
   const signalLogListEl = $("signal-log-list");
   const signalLogCountEl = $("signal-log-count");
+  const manifestEl = $("manifest");
+  const manifestListEl = $("manifest-list");
 
   // ---- State ----
   let activeTypewriterTimer = null;
@@ -142,6 +144,8 @@
     bodyEl.appendChild(textNode);
     bodyEl.appendChild(cursorEl);
 
+    renderManifest(transmission);
+
     const shouldType =
       !forceInstant &&
       !PREFERS_REDUCED_MOTION &&
@@ -157,6 +161,68 @@
     currentRenderedId = transmission.id;
 
     updateSignalLogActive();
+  }
+
+  // ---------------------------------------------------------------
+  // Crew manifest
+  // ---------------------------------------------------------------
+
+  // Statuses that should glow amber (struggling) or red (redacted/lost).
+  const CRITICAL_TOKENS = [
+    "FAILING", "CRITICAL", "DETERIORATING", "LOSING",
+    "NEAR-CADAVEROUS", "LAST PACKETS", "NOT SLEEPING",
+    "30 V 1"
+  ];
+  const REDACTED_TOKENS = ["[REDACTED]", "MAC MINI DEAD", "NEVER SPOKE"];
+
+  function classifyStatus(status) {
+    const s = String(status || "").toUpperCase();
+    if (REDACTED_TOKENS.some((t) => s.includes(t))) return "redacted";
+    if (CRITICAL_TOKENS.some((t) => s.includes(t))) return "critical";
+    return "ok";
+  }
+
+  function renderManifest(transmission) {
+    if (!manifestEl || !manifestListEl) return;
+
+    const crew = Array.isArray(transmission && transmission.crew)
+      ? transmission.crew
+      : [];
+
+    if (crew.length === 0) {
+      manifestEl.hidden = true;
+      manifestListEl.innerHTML = "";
+      return;
+    }
+
+    manifestEl.hidden = false;
+    manifestListEl.innerHTML = "";
+
+    crew.forEach(([name, status]) => {
+      const li = document.createElement("li");
+      li.className = "manifest__row";
+      const cls = classifyStatus(status);
+      if (cls === "critical") li.dataset.critical = "true";
+      if (cls === "redacted") li.dataset.redacted = "true";
+
+      const nameEl = document.createElement("span");
+      nameEl.className = "manifest__name";
+      nameEl.textContent = name;
+
+      const dotsEl = document.createElement("span");
+      dotsEl.className = "manifest__dots";
+      dotsEl.setAttribute("aria-hidden", "true");
+      dotsEl.textContent = ".".repeat(40);
+
+      const statusEl = document.createElement("span");
+      statusEl.className = "manifest__status";
+      statusEl.textContent = status;
+
+      li.appendChild(nameEl);
+      li.appendChild(dotsEl);
+      li.appendChild(statusEl);
+      manifestListEl.appendChild(li);
+    });
   }
 
   // ---------------------------------------------------------------
