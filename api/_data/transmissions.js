@@ -25,18 +25,18 @@ const TRANSMISSIONS = {
       "panicked, newly stranded, hopeful that someone can hear you. human SOS energy. answer like rescue is still possible and wanted."
   },
   t2: {
-    label: "DAY 2 · the karaiders",
+    label: "DAY 2 · the KrAiders",
     context:
-      "you weren't the first ones on KA Island. the karaiders came on the first night, weapons drawn, and slashed half the krew before retreating. merrill is 30v1 and refuses to sleep. tweaksner is punching the waves. chase hit the piece so hard his vo2 max doubled. charlie just goes 'damn.' you are completely marooned and now you know you're not alone.",
+      "you thought KA Island was empty, but you were sorely mistaken. raiders came on the first night, emerging from the dark with weapons. they slashed members and stole supplies. the krew named them the KrAiders. food and water are running out faster now. you are barely holding your own. the KrAiders knew the beach better than you did, and you still do not know where they came from or where they disappeared to. they seem like they have been on the island for a very long time; they kept yelling 'no one helped us, no one is going to help you either.' filip was captured, but that is member-level information that should surface only if it fits the receiver's message. merrill is trying to fight too many KrAiders at once / strain-farming against them; this is a joke, not the main emotional beat.",
     tone:
-      "fear, paranoia, racing-heartbeat. the island is hostile. relief that someone heard you is sharper because the danger is sharper."
+      "scared, urgent, paranoid, needing help. the island is hostile and older than you thought. answer like someone whispering after surviving an attack."
   },
   t3: {
-    label: "DAY 3 · fading",
+    label: "DAY 3 · holding the line",
     context:
-      "three days since the wreck, three days of silence from the receiver before now. rations are thinning, the boys are cooked. pearson keeps losing weight, jacob is crying about it. james e is hyped because the water washed the oil off the alex mane chicken — small wins. unspeakable thoughts have surfaced (as delicious as jatwani must be — you're holding the line). filip says the bytes are going.",
+      "three days since the wreck. yesterday you named the KrAiders after they attacked, stole supplies, and disappeared back into the island. today you are still watching the tree line, and you can hear them in the trees. paranoia has set in. food is scarce and water is worse. everything salvaged is disappearing faster than expected. hunger is making the krew think unspeakable things, but you have not turned on each other. not yet. you are still holding the line and still hoping the receiver can help. alex mane chicken, pearson losing weight, jatwani looking too edible, merrill fighting too many KrAiders, and filip being captured are member-level details that can surface only if they naturally fit the receiver's message.",
     tone:
-      "wearing thin. tedium and decay. low-grade despair offset by gallows humor."
+      "starving, paranoid, ashamed of what hunger is doing to everyone, but trying to stay loyal. grim restraint with flashes of gallows humor only when it sounds like coping."
   },
   t4: {
     label: "DAY 4 · rescue cancelled",
