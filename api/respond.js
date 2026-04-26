@@ -1,7 +1,13 @@
 // POST /api/respond
 //
-// v17 contract — conversation-aware chat, day-aware context, topic-responsive
+// v21 contract — conversation-aware chat, day-aware context, topic-responsive
 // replies. Hard safety rails preserved. No fixed openers.
+//
+// v21 adds the KARAIDER INTERCEPT easter egg: BEFORE the OpenAI call, the
+// server checks four trigger vectors (magic phrase, ≥3 raider mentions,
+// 1-4am PT atmospheric window, 5/2 14-19 PT party window, plus a 5% rare
+// roll). If any trips, the response shape carries an `intercept` field
+// instead of an LLM reply and the client renders the takeover.
 //
 // Request body:
 //   {
@@ -17,7 +23,9 @@
 //   }
 //
 // Response:
-//   200 { reply, name, topic }            success
+//   200 { reply, name, topic }                    normal LLM success
+//   200 { intercept: { mode:"full", variant } }   karaider takeover (client renders monologue + map)
+//   200 { intercept: { mode:"rare", line } }      single-line karaider stinger
 //   422 { error: "moderation_blocked" }   user input flagged
 //   422 { error: "output_blocked" }       model output failed sanitizer
 //   429 { error: "rate_limited" }
@@ -31,6 +39,7 @@
 const MEMBERS = require("./_data/members.js");
 const TOPICS  = require("./_data/topics.js");
 const { getTransmissionContext } = require("./_data/transmissions.js");
+const { checkIntercept }         = require("./_data/karaider.js");
 
 // ----- safety hardening -------------------------------------------------
 
@@ -295,6 +304,38 @@ module.exports = async function handler(req, res) {
   if (mod.flagged) {
     res.status(422).json({ error: "moderation_blocked" });
     return;
+  }
+
+  // v21 — KARAIDER INTERCEPT.
+  //
+  // checked AFTER moderation (we don't want a flagged input to "succeed"
+  // via the easter egg) but BEFORE the OpenAI call so intercepts cost
+  // exactly zero LLM tokens. Once we decide an intercept fires, we skip
+  // the entire LLM/topic path and hand the client a sentinel payload.
+  //
+  // History semantics: full intercept logic counts USER messages only,
+  // and during first-contact (`!isFollowUp`) the client doesn't even
+  // ship history, so `history` is correctly the empty array there.
+  // Magic-phrase check requires `isFirstTurn`, which we derive from the
+  // history length, matching the client's "first contact" definition.
+  const intercept = checkIntercept({
+    message: userText,
+    history: history,
+    now: new Date()
+  });
+  if (intercept) {
+    if (intercept.mode === "full") {
+      res.status(200).json({
+        intercept: { mode: "full", variant: intercept.variant || "default" }
+      });
+      return;
+    }
+    if (intercept.mode === "rare") {
+      res.status(200).json({
+        intercept: { mode: "rare", line: intercept.line }
+      });
+      return;
+    }
   }
 
   const name  = isFollowUp ? incomingConn : pickRandom(MEMBERS, usedNames);

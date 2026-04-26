@@ -18,7 +18,7 @@
 
   <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23000'/><circle cx='16' cy='16' r='6' fill='%234AE290'/></svg>" />
 
-  <link rel="stylesheet" href="styles.css?v=v22" />
+  <link rel="stylesheet" href="styles.css?v=v28" />
 </head>
 <body>
   <div class="grid" aria-hidden="true"></div>
@@ -26,6 +26,14 @@
   <div class="noise" aria-hidden="true"></div>
   <div class="vignette" aria-hidden="true"></div>
   <div class="signal-loss" id="signal-loss" aria-hidden="true"></div>
+
+  <div class="hijack-flash" id="hijack-flash" hidden aria-hidden="true">
+    <div class="hijack-flash__title" id="hijack-flash-title">UNKNOWN BROADCAST</div>
+    <div class="hijack-flash__sub" id="hijack-flash-sub">SIGNAL HIJACKED</div>
+    <div class="hijack-flash__bars" id="hijack-flash-bars"></div>
+    <div class="hijack-flash__spinners" id="hijack-flash-spinners"></div>
+    <div class="hijack-flash__hint">DO NOT TRANSMIT BACK</div>
+  </div>
 
   <header class="topbar" role="banner">
     <span class="topbar__id">KAPPA ALPHA · SHORTWAVE MONITOR · IP 664.LOMITA.CT.94305</span>
@@ -125,7 +133,7 @@
     KAPPA ALPHA · STANFORD · MAY 2026
   </footer>
 
-  <script src="transmissions.js?v=v22"></script>
-  <script src="app.js?v=v22"></script>
+  <script src="transmissions.js?v=v28"></script>
+  <script src="app.js?v=v28"></script>
 </body>
 </html>

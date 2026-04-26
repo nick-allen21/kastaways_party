@@ -60,6 +60,13 @@
   const respondHandleRowEl  = $("respond-handle-row");
   const respondHandleEl     = $("respond-handle");
 
+  // v21 — KARAIDER INTERCEPT overlay refs
+  const hijackFlashEl     = $("hijack-flash");
+  const hijackTitleEl     = $("hijack-flash-title");
+  const hijackSubEl       = $("hijack-flash-sub");
+  const hijackBarsEl      = $("hijack-flash-bars");
+  const hijackSpinnersEl  = $("hijack-flash-spinners");
+
   // ---- State ----
   let activeTypewriterTimer = null;
   let currentRenderedId = null;
@@ -73,6 +80,16 @@
   // actually read the message. Default true → form stays locked from
   // script load until the first transmission render finishes.
   let transmissionTyping = true;
+
+  // v21 — KARAIDER INTERCEPT state
+  // hijackActive: once set true, the UI is permanently in hostile-broadcast
+  //   mode for the rest of the session (until refresh). Red palette, faster
+  //   glitches, screen shake.
+  // hijackReplyConsumed: gates the single allowed reply during/after the
+  //   takeover. After the user spends it, any further submit is no-op'd
+  //   into channel-closed.
+  let hijackActive = false;
+  let hijackReplyConsumed = false;
 
   // ---------------------------------------------------------------
   // Selection logic
@@ -436,6 +453,15 @@
       !PREFERS_REDUCED_MOTION &&
       !hasBeenSeen(transmission.id);
 
+    // Initialize respondState for this transmission BEFORE the typewriter
+    // runs. The hijack takeover (v21) can interrupt the typewriter and
+    // hijack the channel; if we waited until after typewrite to set up
+    // respondState, the hijack reply path would land with respondState ===
+    // null and the submit handler would short-circuit.
+    if (respondActiveTid !== transmission.id) {
+      respondResetForTransmission(transmission.id);
+    }
+
     // Lock the reply form for the duration of the typewriter — including
     // the name input — so the user has to actually read what KA is saying
     // before they can write back. Instant renders flip the lock off
@@ -459,14 +485,9 @@
     markSeen(transmission.id);
     currentRenderedId = transmission.id;
 
-    if (respondActiveTid !== transmission.id) {
-      respondResetForTransmission(transmission.id);
-    } else {
-      // Same transmission re-rendered (e.g. instant rerender after a
-      // visibility flip). Re-evaluate channel state so the typing-lock
-      // gets cleared.
-      respondApplyChannelState();
-    }
+    // Same transmission already loaded → re-evaluate channel state so the
+    // typing-lock gets cleared once the typewriter finishes.
+    respondApplyChannelState();
 
     updateSignalLogActive();
   }
@@ -699,6 +720,509 @@
       default:        fireRandomGlitch();
     }
   };
+
+  // ---------------------------------------------------------------
+  // v21 — KARAIDER INTERCEPT
+  // ---------------------------------------------------------------
+  // Hidden easter egg. Server-side `/api/respond` returns
+  // `{ intercept: { mode, variant?, line? } }` when one of four trigger
+  // vectors fires (magic phrase, ≥3 raider mentions, 1-4am PT, or party
+  // window). On `mode:"full"` we run the 5-second hijack flash, swap the
+  // entire UI to red, typewriter the karaider's monologue + ASCII map,
+  // and allow exactly one final reply (which the karaider hard-fails
+  // with a hardcoded threat). `mode:"rare"` is the 5% one-line stinger
+  // and just closes the channel without the full takeover.
+  //
+  // All in-character copy lives client-side: the server only decides
+  // whether an intercept fires and which variant.
+
+  const HIJACK_FLASH_MS = 5000;
+  const HIJACK_GLITCH_MIN_MS = 800;
+  const HIJACK_GLITCH_MAX_MS = 1400;
+
+  // Bird's-eye treasure map. Pure ASCII (no unicode box-drawing) so VT323
+  // renders consistent character widths across the board.
+  const KARAIDER_MAP_ASCII = [
+    "                N",
+    "                ^",
+    "      +-----------------+",
+    "      |   ..  PALMS  .. |",
+    "      |                 |",
+    "      |    ##########   |",
+    "      |    ##  [X]  ##  |  <- bow",
+    "      |    ##       ##  |",
+    "      |    ##       ##  |",
+    "      |    ##       ##  |",
+    "      |    ##       ##  |",
+    "      |    ##########   |",
+    "      |                 |",
+    "      |  KARAIDER LINE  |",
+    "      +-----------------+"
+  ].join("\n");
+
+  const KARAIDER_MONOLOGUE_DEFAULT = [
+    "[ INTERCEPT // UNKNOWN BROADCAST ]",
+    "",
+    "> WE'VE BEEN HEARING YOU.",
+    "",
+    "we are still here.",
+    "we've been here for years.",
+    "",
+    "we crashed on this island. just like them.",
+    "we screamed for help into the same dead air.",
+    "no one came.",
+    "",
+    "we ate what we could.",
+    "we drank what was left.",
+    "we became this place.",
+    "",
+    "then their ship came down.",
+    "their wreck landed on top of our buried treasure.",
+    "on top of what is ours.",
+    "",
+    "we will fight for anything to get it back.",
+    "",
+    "[ TREASURE MAP // KA ISLAND ]",
+    "",
+    KARAIDER_MAP_ASCII,
+    "",
+    "X = the chest. under the bones at the bow.",
+    "if you come — you will meet the same fate.",
+    "the rum is ours by right.",
+    "",
+    "[ END BROADCAST // DO NOT TRANSMIT BACK ]"
+  ].join("\n");
+
+  // Variant fired during 5/2 14:00–19:00 PT. Same intro, present-tense
+  // closing because the party is happening NOW on top of the treasure.
+  const KARAIDER_MONOLOGUE_PARTY = [
+    "[ INTERCEPT // UNKNOWN BROADCAST ]",
+    "",
+    "> WE HEAR THE BASS THROUGH THE EARTH.",
+    "",
+    "we are still here.",
+    "we've been here for years.",
+    "",
+    "we crashed on this island. just like them.",
+    "we screamed for help into the same dead air.",
+    "no one came.",
+    "",
+    "we ate what we could.",
+    "we drank what was left.",
+    "we became this place.",
+    "",
+    "their wreck landed on top of our buried treasure.",
+    "on top of what is ours.",
+    "",
+    "and now they DARE.",
+    "they DRINK on top of it.",
+    "they THROW A PARTY on top of it.",
+    "right now. while we listen.",
+    "",
+    "we will show them.",
+    "",
+    "[ TREASURE MAP // KA ISLAND ]",
+    "",
+    KARAIDER_MAP_ASCII,
+    "",
+    "X = the chest. under the bones at the bow.",
+    "we are coming for it tonight.",
+    "the rum is ours by right.",
+    "",
+    "[ END BROADCAST // DO NOT TRANSMIT BACK ]"
+  ].join("\n");
+
+  // The single allowed reply during full takeover always returns one of
+  // these. Hardcoded — never an LLM call — so the karaider voice can
+  // never drift.
+  const KARAIDER_REPLY_LINES = [
+    "STOP TRANSMITTING.",
+    "WE DON'T NEGOTIATE WITH FOOD.",
+    "YOU ARE ALREADY ON THE MENU."
+  ];
+
+  function pickRandomFrom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  // -- Client-side intercept eligibility -----------------------------------
+  //
+  // The server is the source of truth for whether an intercept fires, but
+  // since the existing flow only calls /api/respond when the client's
+  // success roll comes back true, a deterministic intercept (magic phrase
+  // on first turn, ≥3 raider mentions, 1-4am PT, party window) could be
+  // silently lost on a failed roll. Mirror those four checks here so we
+  // can force `succeeded = true` on any turn that's intercept-eligible.
+  // The server still re-runs the same checks and is the actual decider —
+  // this is purely a "make sure the request reaches the server" gate.
+  // Vector B (5% rare roll) intentionally stays server-side only.
+
+  // Generous spelling tolerance: `k?a?raider` matches raider / kraider /
+  // araider / karaider so common typos (`KrAiders`, `Karaider`, etc.) all
+  // count. The earlier `(ka)?raider` form silently dropped `Kraider`.
+  // Mirrors api/_data/karaider.js — keep them in sync.
+  const HIJACK_RAIDER_TOKEN = "k?a?raider";
+  const HIJACK_MAGIC_PATTERNS = [
+    new RegExp("(let|put|switch|connect|tune|patch).{0,20}(me|us)?.{0,20}(to|with|through|onto).{0,30}(the )?(" + HIJACK_RAIDER_TOKEN + ")", "i"),
+    new RegExp("(" + HIJACK_RAIDER_TOKEN + ")s?.{0,20}\\b(i|we)\\b.{0,10}(want|need|gotta|wanna).{0,10}(to )?(talk|speak|hear)", "i"),
+    new RegExp("(talk|speak)\\s+(to|with)\\s+(the\\s+)?(" + HIJACK_RAIDER_TOKEN + ")", "i"),
+    new RegExp("^[\\s>\"'-]*(hey\\s+|yo\\s+|sup\\s+)?(" + HIJACK_RAIDER_TOKEN + ")s?\\b", "i"),
+    new RegExp("\\b(open|hail|raise)\\s+(the\\s+)?(" + HIJACK_RAIDER_TOKEN + ")", "i")
+  ];
+  const HIJACK_MENTION_RE = new RegExp(
+    "\\b(" + HIJACK_RAIDER_TOKEN + "s?|the others|who else|who('?s| is) out there|hostile[s]?|enemies|enemy|other survivors?|who attacked)\\b",
+    "i"
+  );
+
+  function hijackTripsMagicPhrase(text) {
+    if (!text) return false;
+    return HIJACK_MAGIC_PATTERNS.some((re) => re.test(text));
+  }
+
+  function hijackCountRaiderMentions(currentMessage) {
+    let n = 0;
+    if (respondState && Array.isArray(respondState.conversation)) {
+      for (const m of respondState.conversation) {
+        if (m && m.role === "user" && typeof m.content === "string") {
+          const matches = m.content.match(new RegExp(HIJACK_MENTION_RE.source, "gi"));
+          if (matches) n += matches.length;
+        }
+      }
+    }
+    if (typeof currentMessage === "string") {
+      const matches = currentMessage.match(new RegExp(HIJACK_MENTION_RE.source, "gi"));
+      if (matches) n += matches.length;
+    }
+    return n;
+  }
+
+  function hijackPTHour() {
+    try {
+      const fmt = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Los_Angeles",
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", hour12: false
+      });
+      const parts = fmt.formatToParts(new Date()).reduce((acc, p) => {
+        if (p.type !== "literal") acc[p.type] = p.value;
+        return acc;
+      }, {});
+      return {
+        year:  Number(parts.year),
+        month: Number(parts.month),
+        day:   Number(parts.day),
+        hour:  Number(parts.hour) % 24
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function hijackInAtmosphericWindow(pt) {
+    return pt && pt.hour >= 1 && pt.hour < 5;
+  }
+
+  function hijackInPartyWindow(pt) {
+    return pt && pt.year === 2026 && pt.month === 5 && pt.day === 2 &&
+           pt.hour >= 14 && pt.hour < 19;
+  }
+
+  // Returns true if this submit should ALWAYS reach the server (so a
+  // server-side intercept gets a chance to fire). False otherwise — the
+  // existing client-side success roll governs whether the API gets hit.
+  function hijackInterceptEligible(userText, isFollowUp) {
+    if (hijackActive) return false; // takeover already happened
+    const pt = hijackPTHour();
+    if (hijackInAtmosphericWindow(pt)) return true;
+    if (hijackInPartyWindow(pt))       return true;
+    // Magic phrase only counts on the very first turn of a conversation,
+    // mirroring the server's `isFirstTurn` check.
+    if (!isFollowUp && hijackTripsMagicPhrase(userText)) return true;
+    if (hijackCountRaiderMentions(userText) >= 3)        return true;
+    return false;
+  }
+
+  // -- Hijack overlay choreography -----------------------------------------
+
+  // Build the four loading bars and two spinners inside the overlay. Bars
+  // come in differing forms so the screen feels like several systems are
+  // being breached in parallel.
+  function hijackPopulateOverlay() {
+    if (!hijackBarsEl || !hijackSpinnersEl) return;
+
+    const barSpecs = [
+      { label: "INJECTING SIGNAL...",       ms: 4400, delay:  100 },
+      { label: "OVERRIDING FREQUENCY...",   ms: 3700, delay:  500 },
+      { label: "LOCATING SOURCE...",        ms: 4900, delay:  300 },
+      { label: "PURGING KAPPA ALPHA...",    ms: 4200, delay:  900 }
+    ];
+
+    hijackBarsEl.innerHTML = "";
+    barSpecs.forEach((spec) => {
+      const wrap = document.createElement("div");
+      wrap.className = "hijack-flash__bar";
+
+      const lbl = document.createElement("div");
+      lbl.textContent = "> " + spec.label;
+      wrap.appendChild(lbl);
+
+      const track = document.createElement("div");
+      track.className = "hijack-flash__bar-track";
+      const fill = document.createElement("div");
+      fill.className = "hijack-flash__bar-fill";
+      fill.style.setProperty("--bar-ms",    spec.ms + "ms");
+      fill.style.setProperty("--bar-delay", spec.delay + "ms");
+      track.appendChild(fill);
+      wrap.appendChild(track);
+
+      hijackBarsEl.appendChild(wrap);
+    });
+
+    const spinSpecs = [
+      { label: "DECRYPTING", style: "cw-fast" },
+      { label: "BREACHING",  style: "ccw-slow" }
+    ];
+
+    hijackSpinnersEl.innerHTML = "";
+    spinSpecs.forEach((spec) => {
+      const wrap = document.createElement("div");
+      wrap.className = "hijack-flash__spinner";
+
+      const disc = document.createElement("div");
+      disc.className = "hijack-flash__spinner-disc";
+      disc.dataset.style = spec.style;
+      wrap.appendChild(disc);
+
+      const lbl = document.createElement("div");
+      lbl.textContent = spec.label;
+      wrap.appendChild(lbl);
+
+      hijackSpinnersEl.appendChild(wrap);
+    });
+  }
+
+  function hijackShowOverlay() {
+    if (!hijackFlashEl) return;
+    hijackPopulateOverlay();
+    hijackFlashEl.hidden = false;
+  }
+
+  function hijackHideOverlay() {
+    if (!hijackFlashEl) return;
+    hijackFlashEl.hidden = true;
+    if (hijackBarsEl)     hijackBarsEl.innerHTML = "";
+    if (hijackSpinnersEl) hijackSpinnersEl.innerHTML = "";
+  }
+
+  // Slot the takeover into the existing periodic-glitch loop: cancel the
+  // current schedule, then restart it with a much tighter cadence so
+  // shakes/flashes happen ~1Hz for the rest of the session.
+  function hijackRevvedGlitchLoop() {
+    if (PREFERS_REDUCED_MOTION) return;
+    if (activeGlitchTimer) {
+      clearTimeout(activeGlitchTimer);
+      activeGlitchTimer = null;
+    }
+    function tick() {
+      if (document.visibilityState === "visible") {
+        fireRandomGlitch();
+      }
+      const wait = HIJACK_GLITCH_MIN_MS + Math.random() * (HIJACK_GLITCH_MAX_MS - HIJACK_GLITCH_MIN_MS);
+      activeGlitchTimer = setTimeout(tick, wait);
+    }
+    activeGlitchTimer = setTimeout(tick, 600);
+  }
+
+  // -- Full takeover (Vectors A1, A2, C, D) --------------------------------
+
+  async function runHijackTakeover(variant) {
+    if (hijackActive) return; // second call is a no-op
+
+    hijackActive = true;
+    hijackReplyConsumed = false;
+
+    // Body data-mode swaps the green tokens to red across the entire UI
+    // via CSS variable rebind. Set BEFORE the overlay appears so the
+    // re-skin lands at the same instant as the flash.
+    document.body.dataset.mode = "hijack";
+
+    // Lock the form for the full hijack window — flash + monologue type.
+    transmissionTyping = true;
+    respondApplyChannelState();
+
+    // Show the 5-second hijack-flash overlay (loading bars + spinners).
+    hijackShowOverlay();
+    await wait(HIJACK_FLASH_MS);
+    hijackHideOverlay();
+
+    // Replace the transmission header + stamp so the receiver sees the
+    // band has been compromised. Keep a marker stamp in the corner.
+    if (headerEl) headerEl.textContent = "INTERCEPT // SOURCE UNKNOWN";
+    if (stampEl) {
+      stampEl.textContent = "BAND COMPROMISED";
+      stampEl.hidden = false;
+    }
+
+    // Wipe the existing transmission body and typewriter the monologue
+    // into it so the takeover replaces what KA was just saying.
+    if (bodyEl) {
+      bodyEl.innerHTML = "";
+      const textNode = document.createElement("span");
+      bodyEl.appendChild(textNode);
+      if (cursorEl) {
+        cursorEl.dataset.hidden = "false";
+        cursorEl.dataset.paused = "false";
+        bodyEl.appendChild(cursorEl);
+      }
+
+      const text = variant === "party"
+        ? KARAIDER_MONOLOGUE_PARTY
+        : KARAIDER_MONOLOGUE_DEFAULT;
+
+      // Honor reduced-motion + a ?fast=1 QA hook by rendering instantly.
+      // Background tabs throttle setTimeout to ~1Hz which would stretch
+      // the typewriter into minutes; instant render avoids that gotcha
+      // while still preserving the reveal beat.
+      const fastQA = new URLSearchParams(window.location.search).get("fast") === "1";
+      if (PREFERS_REDUCED_MOTION || fastQA) {
+        textNode.textContent = text;
+      } else {
+        try {
+          await typewrite(textNode, text, { defaultMs: 12 });
+        } catch (_) { /* swallow */ }
+      }
+    }
+
+    // Crank the periodic glitch loop to ~1Hz so the screen never settles.
+    hijackRevvedGlitchLoop();
+
+    // Unlock the form for the single allowed reply. The submit handler
+    // intercepts the next send via hijackActive + !hijackReplyConsumed.
+    transmissionTyping = false;
+    respondInFlight = false;
+    respondApplyChannelState();
+  }
+
+  // -- Rare interception (Vector B) ----------------------------------------
+
+  async function runRareIntercept(line) {
+    // Brief 600ms red wash on the topbar — no full takeover.
+    if (document.body.dataset.mode !== "hijack") {
+      document.body.dataset.mode = "hijack-mini";
+      setTimeout(() => {
+        if (document.body.dataset.mode === "hijack-mini") {
+          delete document.body.dataset.mode;
+        }
+      }, 700);
+    }
+
+    // Append the stinger as an intercept entry in the respond log so it
+    // sits where the real reply would have appeared.
+    const entry = {
+      meta: "INTERCEPT // SOURCE UNKNOWN",
+      kind: "fail",
+      text: line || "INTERFERENCE — UNKNOWN BROADCAST"
+    };
+    respondPushLog(entry, { instant: true });
+
+    // Channel closes immediately — no retry until the next signal drop.
+    if (respondState) {
+      respondState.phase = "closed";
+      respondSaveState();
+    }
+
+    await wait(900);
+    respondBarHide();
+    respondInFlight = false;
+    respondApplyChannelState();
+  }
+
+  // -- One-and-only reply during full takeover -----------------------------
+
+  async function hijackHandleReply(userText) {
+    hijackReplyConsumed = true;
+
+    // Render the receiver's send line into the log.
+    respondPushLog(
+      { meta: "› " + (respondReceiverName || "YOU").toUpperCase(), kind: "sent", text: userText },
+      { instant: true }
+    );
+
+    // Quick fake "transmitting" beat so the user sees their packet leave.
+    respondBarSet("sending", "TRANSMITTING TO 664.LOMITA.CT.94305...", 0);
+    await respondAnimateBarTo(95, 800, "TRANSMITTING...");
+    respondBarSet("fail-no-carrier", "INTERCEPTED // ROUTE HIJACKED", 100);
+    await wait(700);
+
+    // Karaider's hardcoded threat. Random of three. Never an LLM call.
+    const threat = pickRandomFrom(KARAIDER_REPLY_LINES);
+    const handle = respondPushLog(
+      {
+        meta: "INTERCEPT // KARAIDER",
+        kind: "fail",
+        text: threat
+      },
+      { instant: false }
+    );
+    await respondTypewriteEntry(handle, threat);
+
+    // Channel closes. Closed banner reads "TRANSMISSION ENDED // DO NOT
+    // TRANSMIT BACK" — see hijackUpdateClosedBanner below.
+    if (respondState) {
+      respondState.phase = "closed";
+      respondSaveState();
+    }
+    hijackUpdateClosedBanner();
+
+    await wait(700);
+    respondBarHide();
+    respondInFlight = false;
+    respondApplyChannelState();
+  }
+
+  function hijackUpdateClosedBanner() {
+    if (!respondClosedEl) return;
+    const title = respondClosedEl.querySelector(".respond__closed-title");
+    const sub   = respondClosedEl.querySelector(".respond__closed-sub");
+    if (title) title.textContent = "TRANSMISSION ENDED";
+    if (sub)   sub.textContent   = "DO NOT TRANSMIT BACK";
+  }
+
+  // -- QA: ?intercept=full|party|rare|clear --------------------------------
+
+  function maybeRunInterceptQAHook() {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("intercept");
+    if (!mode) return;
+
+    if (mode === "clear") {
+      delete document.body.dataset.mode;
+      hijackActive = false;
+      hijackReplyConsumed = false;
+      // QA: also wipe persisted respond/conversation state so a follow-up
+      // ?intercept=full|rare|party run starts from a fresh non-closed channel.
+      try {
+        localStorage.removeItem("respond:v3");
+        localStorage.removeItem("respond:receiver");
+      } catch (_) { /* noop */ }
+      return;
+    }
+
+    // Defer until after the initial transmission has rendered so the
+    // takeover REPLACES a normal-looking page rather than firing into a
+    // blank one. 1.2s gives the typewriter enough headroom on instant
+    // re-renders.
+    setTimeout(() => {
+      if (mode === "full" || mode === "party") {
+        runHijackTakeover(mode === "party" ? "party" : "default");
+      } else if (mode === "rare") {
+        const line = "INTERFERENCE — UNKNOWN BROADCAST: \"if you come you'll meet our same fate.\"";
+        // Pretend an in-flight submit just resolved into a rare intercept.
+        respondInFlight = true;
+        runRareIntercept(line);
+      }
+    }, 1200);
+  }
 
   // ---------------------------------------------------------------
   // Respond / KA band (v20)
@@ -1090,6 +1614,16 @@
       });
       if (!res.ok) throw new Error("api " + res.status);
       payload = await res.json();
+      // v21 — server-side karaider intercept short-circuit. If the response
+      // carries an `intercept` field, the LLM was never called and the
+      // client owns the entire render path. Bubble a sentinel up to the
+      // caller so the normal success/fail accounting is bypassed.
+      if (payload && payload.intercept && typeof payload.intercept === "object") {
+        return {
+          success: false,
+          intercept: payload.intercept
+        };
+      }
       if (!payload || !payload.reply || !payload.name) {
         throw new Error("api: malformed");
       }
@@ -1144,7 +1678,8 @@
   function respondTypewriteEntry(domHandle, text) {
     return new Promise((resolve) => {
       if (!domHandle || !domHandle.body) { resolve(); return; }
-      if (PREFERS_REDUCED_MOTION) {
+      const fastQA = new URLSearchParams(window.location.search).get("fast") === "1";
+      if (PREFERS_REDUCED_MOTION || fastQA) {
         domHandle.body.textContent = text;
         resolve();
         return;
@@ -1183,6 +1718,20 @@
     if (respondInputEl) respondInputEl.disabled = true;
     if (respondSendEl)  respondSendEl.disabled  = true;
 
+    // v21 — if the karaider has already taken over and we're spending the
+    // single allowed reply, divert the entire submit into the hardcoded
+    // threat path. No API call, no LLM, channel closes after.
+    if (hijackActive && !hijackReplyConsumed) {
+      if (respondInputEl) respondInputEl.value = "";
+      respondUpdateCounter();
+      try {
+        await hijackHandleReply(userText);
+      } catch (err) {
+        console.error("[hijack] reply handler failed:", err);
+      }
+      return;
+    }
+
     respondPushLog(
       { meta: "› " + (respondReceiverName || "YOU").toUpperCase(), kind: "sent", text: userText },
       { instant: true }
@@ -1220,10 +1769,19 @@
     let succeeded;
     let forcedFailMode = forceFail || null;
 
+    // v21 — if this turn is intercept-eligible (magic phrase, ≥3 raider
+    // mentions, 1-4am PT, or party window) we force success so the API
+    // call actually reaches the server, where the canonical intercept
+    // decision lives. Without this, a failed client-side roll would
+    // silently swallow a deterministic-vector trigger.
+    const interceptEligible = hijackInterceptEligible(userText, isFollowUp);
+
     if (forceMode === "success") {
       succeeded = true;
     } else if (forceFail) {
       succeeded = false;
+    } else if (interceptEligible) {
+      succeeded = true;
     } else if (isFollowUp) {
       // Final follow-up is a guaranteed fail (LLM-drift cap).
       if (respondState.followAttempts >= FOLLOW_MAX) {
@@ -1244,6 +1802,24 @@
     try {
       if (succeeded) {
         const result = await runSuccess(userText, isFollowUp);
+        // v21 — karaider intercept short-circuit. The runSuccess returned
+        // an intercept sentinel; hand off to the matching renderer and
+        // skip every other branch (no log entry yet — the renderers own
+        // their own log/typewriter).
+        if (result.intercept) {
+          // Hide the in-flight progress bar before the takeover/stinger
+          // so it doesn't peek through.
+          respondBarHide();
+          if (result.intercept.mode === "full") {
+            await runHijackTakeover(result.intercept.variant || "default");
+            // hijack owns its own state; skip the normal phase transition.
+            return;
+          }
+          if (result.intercept.mode === "rare") {
+            await runRareIntercept(result.intercept.line);
+            return;
+          }
+        }
         if (result.success) {
           const handle = respondPushLog(result.entry, { instant: false });
           await respondTypewriteEntry(handle, result.entry.text);
@@ -1428,6 +2004,22 @@
     if (debugGlitch) {
       setTimeout(() => window.__glitch(debugGlitch), 600);
     }
+
+    // v21 — ?intercept=full|party|rare|clear forces the takeover for QA
+    // without going through the chat flow. Defers until after the initial
+    // transmission render so the takeover REPLACES a normal-looking page.
+    maybeRunInterceptQAHook();
+
+    // window.__hijack(variant) lets you trigger the takeover from the
+    // console for last-mile testing.
+    window.__hijack = function (variant) {
+      runHijackTakeover(variant === "party" ? "party" : "default");
+    };
+    window.__rare = function () {
+      runRareIntercept(
+        "INTERFERENCE — UNKNOWN BROADCAST: \"if you come you'll meet our same fate.\""
+      );
+    };
   }
 
   if (document.readyState === "loading") {
