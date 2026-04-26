@@ -32,14 +32,22 @@ html, body {
   font-size: 16px;
   line-height: 1.55;
   min-height: 100vh;
+  /* dvh fixes the iOS Safari "100vh excludes URL bar" quirk so the page bg
+     and overlays cover the full visible viewport, including under the notch
+     and home indicator. */
+  min-height: 100dvh;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-body {
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-}
+/* NOTE: safe-area-inset is intentionally NOT applied to <body> here. If it
+   were, the body's background would be inset from the device edges and the
+   ambient overlays (.scanlines/.noise/.vignette/.grid) would visibly stop
+   short of the notch + home-indicator zones. Instead, each top-level block
+   (.topbar, .footbar, .cta-rescue) handles its own safe-area padding so
+   text never lands under the iOS status bar / home indicator while the
+   ambient effects bleed all the way to the physical edges. */
 
 ::selection { background: var(--green); color: var(--bg); }
 
@@ -54,6 +62,12 @@ a { color: var(--green); }
 .vignette {
   position: fixed;
   inset: 0;
+  /* Defensive sizing: explicit width/height ensures coverage even when iOS
+     Safari is mid-animating its URL bar and `inset: 0` momentarily resolves
+     to a smaller box. dvh tracks the live viewport; vh + vw are fallbacks. */
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   pointer-events: none;
   z-index: 100;
 }
@@ -61,6 +75,9 @@ a { color: var(--green); }
 .grid {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   pointer-events: none;
   z-index: 0;
   background-image:
@@ -122,7 +139,14 @@ a { color: var(--green); }
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px var(--pad);
+  /* Top inset adds env(safe-area-inset-top) so the org/IP line never lands
+     under the iPhone status bar or the iOS dynamic island. The horizontal
+     insets defend against landscape notches without crowding portrait. */
+  padding:
+    calc(14px + env(safe-area-inset-top))
+    max(var(--pad), env(safe-area-inset-right))
+    14px
+    max(var(--pad), env(safe-area-inset-left));
   border-bottom: 1px solid var(--green-faint);
   font-family: var(--font-mono);
   font-size: 12px;
@@ -131,7 +155,30 @@ a { color: var(--green); }
   color: var(--green-dim);
 }
 
-.topbar__id { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The id holds two pieces (org + IP). On wide screens they sit inline as a
+   single visual line; on narrow screens they wrap, so the long IP never
+   gets clipped or truncated. */
+.topbar__id {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+  row-gap: 2px;
+  min-width: 0;
+}
+
+.topbar__id-org,
+.topbar__id-ip {
+  white-space: nowrap;
+}
+
+/* Visual separator between org and IP on wide screens; hidden when they
+   wrap onto separate lines (mobile breakpoint below). */
+.topbar__id-org::after {
+  content: " · ";
+  margin-left: 4px;
+  color: var(--green-faint);
+}
 
 .topbar__status {
   display: inline-flex;
@@ -891,7 +938,12 @@ a { color: var(--green); }
 .footbar {
   position: relative;
   z-index: 1;
-  padding: 24px var(--pad);
+  /* Bottom inset clears the iOS home indicator. Side insets defend landscape. */
+  padding:
+    24px
+    max(var(--pad), env(safe-area-inset-right))
+    calc(24px + env(safe-area-inset-bottom))
+    max(var(--pad), env(safe-area-inset-left));
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.16em;
@@ -899,6 +951,62 @@ a { color: var(--green); }
   color: var(--green-faint);
   text-align: center;
   border-top: 1px solid var(--green-faint);
+}
+
+/* ------------------------------------------------------------------
+   Rescue CTA — full-width "[ COME SAVE US ]" link to Partiful.
+   Sits between the terminal and the footer. Diegetic: the survivors
+   are still asking for rescue, and the answer is "show up to the
+   party." Styled as a giant-tap-target terminal button so it reads
+   as actionable rather than decorative.
+------------------------------------------------------------------ */
+
+.cta-rescue {
+  position: relative;
+  z-index: 1;
+  display: block;
+  /* Match the terminal column so the button visually anchors to the
+     same content rail on desktop, but stretches edge-to-edge on phones. */
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding:
+    18px
+    max(var(--pad), env(safe-area-inset-right))
+    18px
+    max(var(--pad), env(safe-area-inset-left));
+  font-family: var(--font-display);
+  font-size: clamp(20px, 5vw, 28px);
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  color: var(--green);
+  background: rgba(74, 226, 144, 0.06);
+  border-top: 1px solid var(--green-faint);
+  border-bottom: 1px solid var(--green-faint);
+  text-shadow: 0 0 8px rgba(74, 226, 144, 0.45);
+  transition: background-color 120ms ease, color 120ms ease, text-shadow 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cta-rescue:hover,
+.cta-rescue:focus-visible {
+  background: var(--green);
+  color: var(--bg);
+  text-shadow: none;
+  outline: none;
+}
+
+.cta-rescue:active {
+  background: var(--green-dim);
+  color: var(--bg);
+}
+
+/* In hijack/karaider mode the green palette becomes red, so the CTA
+   inherits the same swap automatically — except the explicit rgba()
+   tint above bypasses the var swap. Re-target it here. */
+body[data-mode="hijack"] .cta-rescue {
+  background: rgba(255, 42, 42, 0.06);
 }
 
 /* ------------------------------------------------------------------
@@ -912,6 +1020,16 @@ a { color: var(--green); }
     gap: 6px;
     font-size: 11px;
   }
+
+  /* Org + IP stack onto their own short lines so neither is ever
+     truncated by the device width. The wide-screen "·" separator is
+     suppressed because each piece now reads as its own line. */
+  .topbar__id {
+    flex-direction: column;
+    row-gap: 3px;
+  }
+
+  .topbar__id-org::after { content: ""; margin-left: 0; }
 
   .ambient {
     padding: 10px var(--pad);
@@ -928,6 +1046,13 @@ a { color: var(--green); }
   .boot-seq {
     font-size: 14px;
     min-height: 14em;
+  }
+
+  .cta-rescue {
+    font-size: clamp(18px, 6vw, 24px);
+    padding-top: 16px;
+    padding-bottom: 16px;
+    letter-spacing: 0.12em;
   }
 }
 

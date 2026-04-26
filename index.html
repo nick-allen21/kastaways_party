@@ -18,7 +18,7 @@
 
   <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23000'/><circle cx='16' cy='16' r='6' fill='%234AE290'/></svg>" />
 
-  <link rel="stylesheet" href="styles.css?v=v31" />
+  <link rel="stylesheet" href="styles.css?v=v32" />
 </head>
 <body>
   <div class="grid" aria-hidden="true"></div>
@@ -36,7 +36,10 @@
   </div>
 
   <header class="topbar" role="banner">
-    <span class="topbar__id">KAPPA ALPHA · SHORTWAVE MONITOR · IP 664.LOMITA.CT.94305</span>
+    <span class="topbar__id">
+      <span class="topbar__id-org">KAPPA ALPHA · SHORTWAVE MONITOR</span>
+      <span class="topbar__id-ip">IP 664.LOMITA.CT.94305</span>
+    </span>
     <span class="topbar__status" id="signal-status">
       <span class="dot" id="signal-dot" aria-hidden="true"></span>
       <span class="topbar__status-label" id="signal-status-label">SIGNAL STATUS: ACTIVE</span>
@@ -45,8 +48,7 @@
 
   <aside class="ambient" aria-label="Ambient telemetry">
     <div class="ambient__row">
-      <span class="ambient__label">DAYS SINCE WRECK</span>
-      <span class="ambient__value" id="days-counter">DAY -- OF ██</span>
+      <span class="ambient__value" id="days-counter">DAY -- SINCE WRECK</span>
     </div>
   </aside>
 
@@ -129,11 +131,20 @@
     </section>
   </main>
 
+  <a class="cta-rescue"
+     id="cta-rescue"
+     href="https://partiful.com/e/6oBR7UUUB5bhgi3imYac"
+     target="_blank"
+     rel="noopener noreferrer"
+     aria-label="Come save us — RSVP on Partiful">
+    [ COME SAVE US ]
+  </a>
+
   <footer class="footbar" role="contentinfo">
     KAPPA ALPHA · STANFORD · MAY 2026
   </footer>
 
-  <script src="transmissions.js?v=v31"></script>
-  <script src="app.js?v=v31"></script>
+  <script src="transmissions.js?v=v32"></script>
+  <script src="app.js?v=v32"></script>
 </body>
 </html>

@@ -536,7 +536,7 @@
     const current = getCurrentTransmission(now);
     const day = current ? TRANSMISSIONS.indexOf(current) + 1 : 1;
     if (daysCounterEl) {
-      daysCounterEl.textContent = "DAY " + pad(day) + " OF ██";
+      daysCounterEl.textContent = "DAY " + pad(day) + " SINCE WRECK";
     }
   }
 
