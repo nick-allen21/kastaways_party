@@ -437,12 +437,29 @@
     );
   }
 
+  function updatePartyMode(transmission) {
+    if (!document.body || !transmission) return;
+
+    // T6 is no longer an SOS. Once the Final Bash has started, the whole
+    // terminal shifts from distress-signal green into a brighter party signal.
+    // Date-based activation keeps party mode alive even if the user browses
+    // older transmissions from the signal log; ?t=6 also previews it for QA.
+    const finalBashIsLive = new Date() >= SIGNAL_TERMINATED;
+    const isFinalBash = transmission.id === "T6" || finalBashIsLive;
+    if (isFinalBash) {
+      document.body.dataset.partyMode = "final-bash";
+    } else {
+      delete document.body.dataset.partyMode;
+    }
+  }
+
   async function renderTransmission(transmission, opts) {
     opts = opts || {};
     const forceInstant = !!opts.instant;
 
     headerEl.textContent = transmission.header;
     updateCtaForTransmission(transmission);
+    updatePartyMode(transmission);
 
     if (transmission.stamp) {
       stampEl.textContent = transmission.stamp;
@@ -592,6 +609,7 @@
     } catch (_) { /* noop */ }
     try {
       delete document.body.dataset.mode;
+      delete document.body.dataset.partyMode;
     } catch (_) { /* noop */ }
     location.reload();
   }

@@ -14,6 +14,13 @@
   --red-dim:   #7F2A2A;
   --red-faint: #3E1414;
 
+  /* v42 — FINAL BASH palette. T6 re-skins the terminal from distress green
+     into ocean-blue party signal while keeping the old CRT bones intact. */
+  --bash-blue:       #49F7FF;
+  --bash-blue-dim:   #2AA6C8;
+  --bash-blue-faint: #123D52;
+  --bash-glow:       rgba(73, 247, 255, 0.55);
+
   --font-display: "VT323", "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
   --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
 
@@ -1011,6 +1018,136 @@ body[data-mode="hijack"] .cta-rescue {
 }
 
 /* ------------------------------------------------------------------
+   v42 — FINAL BASH MODE
+   Activated by `<body data-party-mode="final-bash">` once T6 is active.
+   It keeps the terminal shape but shifts the signal from SOS-green to
+   electric ocean-blue, with pulse/glow that reads like music from the stage.
+------------------------------------------------------------------ */
+
+body[data-party-mode="final-bash"] {
+  --green:       var(--bash-blue);
+  --green-dim:   var(--bash-blue-dim);
+  --green-faint: var(--bash-blue-faint);
+}
+
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"])::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at 50% 35%,
+      rgba(73, 247, 255, 0.16) 0%,
+      rgba(73, 247, 255, 0.05) 34%,
+      transparent 68%);
+  mix-blend-mode: screen;
+  animation: final-bash-ambient-pulse 2.4s ease-in-out infinite;
+}
+
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"]) .grid {
+  background-image:
+    linear-gradient(to right,  rgba(73, 247, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(73, 247, 255, 0.08) 1px, transparent 1px);
+}
+
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"]) .noise {
+  opacity: 0.24;
+  animation-duration: 0.95s;
+}
+
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"]) .scanlines {
+  opacity: 0.48;
+  animation-duration: 5.5s;
+}
+
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"]) .terminal {
+  animation: final-bash-stage-pulse 1.9s ease-in-out infinite;
+}
+
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"]) .transmission__header,
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"]) .countdown__value {
+  text-shadow:
+    0 0 10px rgba(73, 247, 255, 0.45),
+    0 0 22px rgba(73, 247, 255, 0.22);
+}
+
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"]) .dot {
+  background: var(--bash-blue);
+  box-shadow:
+    0 0 8px var(--bash-blue),
+    0 0 18px rgba(73, 247, 255, 0.45);
+  animation: final-bash-dot-pulse 1.05s ease-in-out infinite;
+}
+
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"]) .dot[data-state="terminated"] {
+  background: var(--bash-blue);
+  box-shadow:
+    0 0 8px var(--bash-blue),
+    0 0 20px rgba(73, 247, 255, 0.55);
+  animation: final-bash-dot-pulse 1.05s ease-in-out infinite;
+}
+
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"]) .cta-rescue {
+  background: rgba(73, 247, 255, 0.09);
+  border-color: rgba(73, 247, 255, 0.42);
+  text-shadow:
+    0 0 10px rgba(73, 247, 255, 0.65),
+    0 0 24px rgba(73, 247, 255, 0.32);
+  animation: final-bash-cta-pulse 1.45s ease-in-out infinite;
+}
+
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"]) .cta-rescue:hover,
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"]) .cta-rescue:focus-visible {
+  background: var(--bash-blue);
+  color: var(--bg);
+  text-shadow: none;
+}
+
+body[data-party-mode="final-bash"]:not([data-mode="hijack"]):not([data-mode="hijack-mini"]) .respond__bar-fill {
+  background: linear-gradient(90deg,
+    rgba(73, 247, 255, 0.0) 0%,
+    rgba(73, 247, 255, 0.68) 100%);
+}
+
+@keyframes final-bash-ambient-pulse {
+  0%, 100% { opacity: 0.42; transform: scale(1); }
+  50%      { opacity: 0.78; transform: scale(1.025); }
+}
+
+@keyframes final-bash-stage-pulse {
+  0%, 100% {
+    filter: none;
+    text-shadow: none;
+  }
+  50% {
+    filter: saturate(1.18);
+    text-shadow: 0 0 6px rgba(73, 247, 255, 0.18);
+  }
+}
+
+@keyframes final-bash-dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(1.22); }
+}
+
+@keyframes final-bash-cta-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 rgba(73, 247, 255, 0),
+      inset 0 0 0 rgba(73, 247, 255, 0);
+  }
+  50% {
+    box-shadow:
+      0 0 24px rgba(73, 247, 255, 0.28),
+      inset 0 0 22px rgba(73, 247, 255, 0.08);
+  }
+}
+
+/* ------------------------------------------------------------------
    Mobile
 ------------------------------------------------------------------ */
 
@@ -1068,6 +1205,16 @@ body[data-mode="hijack"] .cta-rescue {
   .ambient__row { gap: 8px; }
 
   .boot-seq__barline { padding-left: 1em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-party-mode="final-bash"]::before,
+  body[data-party-mode="final-bash"] .terminal,
+  body[data-party-mode="final-bash"] .dot,
+  body[data-party-mode="final-bash"] .dot[data-state="terminated"],
+  body[data-party-mode="final-bash"] .cta-rescue {
+    animation: none !important;
+  }
 }
 
 /* ------------------------------------------------------------------
