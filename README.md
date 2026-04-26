@@ -13,6 +13,7 @@ countdown to the next signal.
 
 - Plain HTML + CSS + vanilla JS. No framework, no build step.
 - Hosted on Vercel (free tier), domain `kastaway.party` from Porkbun.
+- Vercel Web Analytics enabled via static HTML script tag.
 - Date-gating is purely client-side (`new Date()`).
 
 ## Files
@@ -63,6 +64,12 @@ http://localhost:8080/?t=4   # forces T4
 3. Add custom domains: `kastaway.party` + `www.kastaway.party`.
 4. Porkbun DNS: either point nameservers to `ns1.vercel-dns.com` / `ns2.vercel-dns.com`, OR keep Porkbun nameservers and add `A @ → 76.76.21.21` + `CNAME www → cname.vercel-dns.com`.
 5. SSL provisions automatically within ~10 min.
+
+## Analytics
+
+Vercel Web Analytics is enabled as of 2026-04-26. The static HTML integration lives in `index.html` and loads `/_vercel/insights/script.js`; no package install or build step is required.
+
+View traffic in the Vercel project dashboard under **Analytics**.
 
 ## Acceptance
 
