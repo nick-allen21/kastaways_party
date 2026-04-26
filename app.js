@@ -34,6 +34,7 @@
   const countdownValueEl = $("countdown-value");
   const countdownEl = $("countdown");
   const daysCounterEl = $("days-counter");
+  const signalStatusEl = $("signal-status");
   const signalDotEl = $("signal-dot");
   const signalStatusLabelEl = $("signal-status-label");
   const signalLogEl = $("signal-log");
@@ -548,6 +549,60 @@
       signalDotEl.dataset.state = "active";
       signalStatusLabelEl.textContent = "SIGNAL STATUS: ACTIVE";
     }
+  }
+
+  // Hidden reset gesture: triple-tap the SIGNAL STATUS pill within
+  // SIGNAL_RESET_WINDOW_MS to wipe persisted state and reload. Useful both as
+  // an in-character easter egg ("the signal blinks back to life") and as the
+  // simplest way for QA / partygoers to retry a transmission without resorting
+  // to devtools or URL params.
+  const SIGNAL_RESET_WINDOW_MS = 3000;
+  const SIGNAL_RESET_TARGET    = 3;
+  const SIGNAL_TAP_FLICKER_MS  = 240;
+  let signalResetTaps = 0;
+  let signalResetTimer = null;
+
+  function flickerSignalDot() {
+    if (!signalDotEl) return;
+    signalDotEl.classList.remove("dot--tap");
+    // Force reflow so re-adding the class restarts the keyframe animation
+    // even on rapid successive taps.
+    void signalDotEl.offsetWidth;
+    signalDotEl.classList.add("dot--tap");
+    setTimeout(() => signalDotEl.classList.remove("dot--tap"), SIGNAL_TAP_FLICKER_MS + 20);
+  }
+
+  function performSignalReset() {
+    try {
+      localStorage.removeItem(RESPOND_LS_KEY);
+      localStorage.removeItem(RECEIVER_LS_KEY);
+      localStorage.removeItem(NAME_LOCKED_LS_KEY);
+    } catch (_) { /* noop */ }
+    try {
+      delete document.body.dataset.mode;
+    } catch (_) { /* noop */ }
+    location.reload();
+  }
+
+  function wireSignalResetTap() {
+    if (!signalStatusEl) return;
+    signalStatusEl.addEventListener("click", (e) => {
+      // Don't let the tap also fire the document-level skip-typewriter /
+      // skip-boot handler. The reset gesture is its own affordance.
+      e.stopPropagation();
+
+      flickerSignalDot();
+      signalResetTaps += 1;
+
+      clearTimeout(signalResetTimer);
+      signalResetTimer = setTimeout(() => { signalResetTaps = 0; }, SIGNAL_RESET_WINDOW_MS);
+
+      if (signalResetTaps >= SIGNAL_RESET_TARGET) {
+        signalResetTaps = 0;
+        clearTimeout(signalResetTimer);
+        performSignalReset();
+      }
+    });
   }
 
   // ---------------------------------------------------------------
@@ -1780,19 +1835,27 @@
     // silently swallow a deterministic-vector trigger.
     const interceptEligible = hijackInterceptEligible(userText, isFollowUp);
 
+    // QA dev-mode: if the receiver name is exactly "Nick Allen" (case-
+    // insensitive), every send connects so the LLM behaviour can be tested
+    // end-to-end without grinding through the 30%/50% probability ladder.
+    // The 5-message hard cap (FOLLOW_MAX) still applies — Nick gets reliable
+    // sends but cannot exceed the LLM-drift ceiling.
+    const nickAllenMode = (respondReceiverName || "").trim().toLowerCase() === "nick allen";
+
     if (forceMode === "success") {
       succeeded = true;
     } else if (forceFail) {
       succeeded = false;
     } else if (interceptEligible) {
       succeeded = true;
+    } else if (isFollowUp && respondState.followAttempts >= FOLLOW_MAX) {
+      // Hard cap on consecutive follow-ups — applies to everyone, including
+      // nickAllenMode, because it's a story/drift constraint not a probability.
+      succeeded = false;
+    } else if (nickAllenMode) {
+      succeeded = true;
     } else if (isFollowUp) {
-      // Final follow-up is a guaranteed fail (LLM-drift cap).
-      if (respondState.followAttempts >= FOLLOW_MAX) {
-        succeeded = false;
-      } else {
-        succeeded = Math.random() < FOLLOW_RATE;
-      }
+      succeeded = Math.random() < FOLLOW_RATE;
     } else {
       succeeded = Math.random() < FIRST_RATE;
     }
@@ -1953,6 +2016,7 @@
     setInterval(tickSignalStatus, 60000);
 
     signalLogToggleEl.addEventListener("click", toggleSignalLog);
+    wireSignalResetTap();
 
     respondInit();
 

@@ -138,6 +138,11 @@ a { color: var(--green); }
   align-items: center;
   gap: 8px;
   white-space: nowrap;
+  /* Triple-tap on the SIGNAL STATUS pill resets persisted state. The pointer
+     cursor makes it discoverable without explicitly labelling it. */
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .dot {
@@ -156,9 +161,22 @@ a { color: var(--green); }
   animation: none;
 }
 
+/* Per-tap feedback on the signal-reset gesture. Layered on top of the base
+   pulse so the existing breath continues; the brief brightness/scale spike
+   reads as "you touched the signal." */
+.dot.dot--tap {
+  animation: dot-tap-flicker 240ms ease-out, pulse 1.6s ease-in-out infinite;
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1;   transform: scale(1); }
   50%      { opacity: 0.35; transform: scale(0.85); }
+}
+
+@keyframes dot-tap-flicker {
+  0%   { transform: scale(1);   filter: brightness(1);   }
+  35%  { transform: scale(1.6); filter: brightness(2.6); }
+  100% { transform: scale(1);   filter: brightness(1);   }
 }
 
 /* ------------------------------------------------------------------
