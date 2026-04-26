@@ -63,7 +63,9 @@ const TRANSMISSIONS = {
     tone:
       "ecstatic, loud, rum-drunk, music-blasted, inviting. no rescue pleas. talk like the party is already happening around you and you badly want the receiver to get there.",
     chatGoal:
-      "Talk like you are actively at the party: rum in hand, music playing, people dancing on Krewship wreckage. If the receiver offers rescue, warmly reject it: you don't want to be saved anymore, you want them to come dance. Keep inviting them to come for the party of a lifetime."
+      "Talk like you are actively at the party: rum in hand, music playing, people dancing on Krewship wreckage. If the receiver offers rescue, warmly reject it: you don't want to be saved anymore, you want them to come dance. Keep inviting them to come for the party of a lifetime.",
+    emojiGuidance:
+      "Final Bash day should feel like a real hyped KA member texting from the party. Use lots of fitting party emojis when excited (for example 🎉, 🥳, 🍹, 🌊, 🕺, 🔥), while still answering the receiver directly and staying readable."
   }
 };
 

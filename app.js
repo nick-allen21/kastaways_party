@@ -1322,27 +1322,58 @@
   // name is GLOBAL (one entry, persists across all 6 transmissions).
   //
   // Phase A — first contact:
-  //   Up to FIRST_MAX send attempts at FIRST_RATE each. If every roll fails
-  //   the channel locks for this transmission. On success, the API picks a
-  //   KA member + topic and writes back a reply (no fixed opener — the
-  //   model just sounds excited the connection worked).
+  //   Up to FIRST_MAX send attempts at the active transmission's first-contact
+  //   rate. If every roll fails the channel locks for this transmission. On
+  //   success, the API picks a KA member + topic and writes back a reply (no
+  //   fixed opener — the model just sounds excited the connection worked).
   //
   // Phase B — connected:
-  //   The receiver is now talking to the same KA member. Each follow-up
-  //   rolls FOLLOW_RATE. ANY drop in this phase (random fail, API-degraded
-  //   corrupt, or the FOLLOW_MAX hard cap) immediately severs the channel —
-  //   no retry until the next transmission drops. So expected exchanges per
-  //   conversation ≈ 1-2: fragile by design, encouraging return visits.
+  //   The receiver is now talking to the same KA member. Each follow-up rolls
+  //   the active transmission's follow-up rate. ANY drop in this phase (random
+  //   fail, API-degraded corrupt, or the FOLLOW_MAX hard cap) immediately
+  //   severs the channel — no retry until the next transmission drops.
   //   FOLLOW_MAX still acts as an LLM-drift ceiling for lucky streaks.
   //
   // Phase C — closed:
   //   Form hidden, "TRANSMISSION LOST" banner shown. Resets when the
   //   active transmission flips.
 
-  const FIRST_RATE  = 0.30;          // each first-contact attempt
   const FIRST_MAX   = 3;             // hard cap on first-contact sends
-  const FOLLOW_RATE = 0.50;          // each follow-up roll; one fail closes channel
   const FOLLOW_MAX  = 5;             // hard cap on consecutive successes; the 5th is forced fail
+  const RESPOND_RATES = {
+    T1: { first: 0.35, follow: 0.50 },
+    T2: { first: 0.45, follow: 0.50 },
+    T3: { first: 0.50, follow: 0.60 },
+    T4: { first: 0.65, follow: 0.60 },
+    T5: { first: 0.70, follow: 0.70 },
+    T6: { first: 1.00, follow: 1.00 }
+  };
+  const RESPOND_PLACEHOLDERS = {
+    T1: {
+      first: "are you guys alive???",
+      connected: "where are you? what happened to the krewship?"
+    },
+    T2: {
+      first: "who are the kraiders?",
+      connected: "where did they come from?"
+    },
+    T3: {
+      first: "can you hear them in the trees?",
+      connected: "are you still holding the line?"
+    },
+    T4: {
+      first: "is it really too late to save you?",
+      connected: "how do we come join you?"
+    },
+    T5: {
+      first: "is the final bash really tomorrow?",
+      connected: "what songs are you singing?"
+    },
+    T6: {
+      first: "where is the final bash?!? 🎉",
+      connected: "save some rum for me!!! 🍹"
+    }
+  };
   const FAIL_MODES = [
     { id: "mid-stall",     weight: 4 },
     { id: "no-carrier",    weight: 2 },
@@ -1363,6 +1394,16 @@
   let respondReceiverName = null; // global handle
   let respondInFlight = false;
   let respondBarTimer = null;
+
+  function respondRatesForTid(tid) {
+    return RESPOND_RATES[tid] || RESPOND_RATES.T1;
+  }
+
+  function respondPlaceholderForPhase(phase) {
+    const tid = (respondState && respondState.tid) || respondActiveTid || currentRenderedId || "T1";
+    const copy = RESPOND_PLACEHOLDERS[tid] || RESPOND_PLACEHOLDERS.T1;
+    return phase === "connected" ? copy.connected : copy.first;
+  }
 
   function respondFreshState(tid) {
     return {
@@ -1499,9 +1540,7 @@
       } else if (!nameOk) {
         respondInputEl.placeholder = "enter your name above first ↑";
       } else {
-        respondInputEl.placeholder = phase === "first"
-          ? "hello? are you out there?"
-          : "static crackles. say something to keep them on the line...";
+        respondInputEl.placeholder = respondPlaceholderForPhase(phase);
       }
     }
     if (respondSendEl)   respondSendEl.disabled = !allowSend;
@@ -1858,6 +1897,7 @@
 
     let succeeded;
     let forcedFailMode = forceFail || null;
+    const rates = respondRatesForTid(respondState.tid);
 
     // v21 — if this turn is intercept-eligible (magic phrase, ≥3 raider
     // mentions, 1-4am PT, or party window) we force success so the API
@@ -1868,7 +1908,7 @@
 
     // QA dev-mode: if the receiver name is exactly "Nick Allen" (case-
     // insensitive), every send connects so the LLM behaviour can be tested
-    // end-to-end without grinding through the 30%/50% probability ladder.
+    // end-to-end without grinding through the probability ladder.
     // The 5-message hard cap (FOLLOW_MAX) still applies — Nick gets reliable
     // sends but cannot exceed the LLM-drift ceiling.
     const nickAllenMode = (respondReceiverName || "").trim().toLowerCase() === "nick allen";
@@ -1886,9 +1926,9 @@
     } else if (nickAllenMode) {
       succeeded = true;
     } else if (isFollowUp) {
-      succeeded = Math.random() < FOLLOW_RATE;
+      succeeded = Math.random() < rates.follow;
     } else {
-      succeeded = Math.random() < FIRST_RATE;
+      succeeded = Math.random() < rates.first;
     }
 
     respondBarSet("sending", isFollowUp ? "TRANSMITTING REPLY..." : "ESTABLISHING UPLINK...", 0);
