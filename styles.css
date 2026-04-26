@@ -954,10 +954,11 @@ a { color: var(--green); }
 }
 
 /* ------------------------------------------------------------------
-   Rescue CTA — full-width "[ COME SAVE US ]" link to Partiful.
+   Rescue/invitation CTA — full-width Partiful link.
    Sits between the terminal and the footer. Diegetic: the survivors
    are still asking for rescue, and the answer is "show up to the
-   party." Styled as a giant-tap-target terminal button so it reads
+   party." From D4 onward, app.js flips the label to "[ COME JOIN US ]"
+   to match the pivot. Styled as a giant-tap-target terminal button so it reads
    as actionable rather than decorative.
 ------------------------------------------------------------------ */
 
@@ -1222,6 +1223,35 @@ body[data-mode="hijack"] .terminal[data-glitch="slip"] {
 body[data-mode="hijack"] .signal-status,
 body[data-mode="hijack"] .topbar__status-label {
   color: var(--red-hot);
+}
+
+/* The respond bar's "sending" fill and status text use hardcoded
+   rgba(74, 226, 144, …) values that bypass the --green token swap, so in
+   karaider mode the loading bar would briefly fill bright green before
+   the karaider hard-failed the reply. Same story for the boot-seq pre-roll
+   glows: the character color swaps to red via var(--green), but the
+   surrounding text-shadow stays green and visibly tints the bars green.
+   Re-tint both to red so every loading-bar surface stays in palette. */
+body[data-mode="hijack"] .respond__bar-fill {
+  background: linear-gradient(90deg,
+    rgba(255, 42, 42, 0.0) 0%,
+    rgba(255, 42, 42, 0.55) 100%);
+}
+
+body[data-mode="hijack"] .respond__bar-status {
+  text-shadow: 0 0 5px rgba(255, 42, 42, 0.4);
+}
+
+body[data-mode="hijack"] .boot-seq {
+  text-shadow: 0 0 6px rgba(255, 42, 42, 0.25);
+}
+
+body[data-mode="hijack"] .boot-seq__bar {
+  text-shadow: 0 0 5px rgba(255, 42, 42, 0.4);
+}
+
+body[data-mode="hijack"] .boot-seq__tag {
+  text-shadow: 0 0 6px rgba(255, 42, 42, 0.5);
 }
 
 /* Mini variant — Vector B rare interception. 600ms red wash on the
