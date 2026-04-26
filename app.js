@@ -1055,12 +1055,16 @@
     await wait(HIJACK_FLASH_MS);
     hijackHideOverlay();
 
-    // Replace the transmission header + stamp so the receiver sees the
-    // band has been compromised. Keep a marker stamp in the corner.
+    // Replace the transmission header so the receiver sees an unknown
+    // source has taken the band. We deliberately HIDE the corner stamp
+    // here — early QA had a "BAND COMPROMISED" stamp slapped over the
+    // header, but it covered up the new "INTERCEPT // SOURCE UNKNOWN"
+    // line and read as a UI bug rather than narrative. The header alone
+    // does the storytelling now.
     if (headerEl) headerEl.textContent = "INTERCEPT // SOURCE UNKNOWN";
     if (stampEl) {
-      stampEl.textContent = "BAND COMPROMISED";
-      stampEl.hidden = false;
+      stampEl.hidden = true;
+      stampEl.textContent = "";
     }
 
     // Wipe the existing transmission body and typewriter the monologue

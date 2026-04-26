@@ -1043,15 +1043,37 @@ body[data-mode="hijack"] .terminal[data-glitch="slip"] {
   animation-duration: 320ms;
 }
 
+/* Re-tint the signal-loss static SVG to red. The base .signal-loss has
+   the green feColorMatrix baked into a data-URL, so the CSS variable
+   swap (--green → --red) can't reach inside it — every periodic glitch
+   would still flash green even after the rest of the UI had gone red,
+   which read as a leftover bug from the green build. Identical SVG,
+   red colour matrix (1, 0.16, 0.16). */
+body[data-mode="hijack"] .signal-loss {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='s'><feTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.16  0 0 0 0 0.16  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23s)'/></svg>");
+}
+
 body[data-mode="hijack"] .signal-loss[data-active="true"] {
   animation-duration: 280ms;
 }
 
-/* Stamp the topbar id so a hijacked viewer sees the band has shifted. */
-body[data-mode="hijack"] .topbar__id::after {
-  content: " · BAND COMPROMISED";
-  color: var(--red-hot);
-  margin-left: 6px;
+/* Kill the hue-rotate inside .terminal[data-glitch="slip"] during a
+   hijack — the base keyframes shift hue around the green wheel, which
+   on a red palette flashes green/yellow as a side effect. We keep the
+   translate/skew (still feels like a transmission slip) but drop the
+   hue rotation so red stays red through the glitch. */
+body[data-mode="hijack"] .terminal[data-glitch="slip"] {
+  animation: hijack-slip 320ms steps(6) 1;
+}
+
+@keyframes hijack-slip {
+  0%   { transform: translate(0, 0)      skewX(0deg); }
+  16%  { transform: translate(9px, -3px)  skewX(2deg); }
+  33%  { transform: translate(-7px, 2px)  skewX(-1.5deg); }
+  50%  { transform: translate(5px, -2px)  skewX(1deg); }
+  66%  { transform: translate(-3px, 2px)  skewX(-0.5deg); }
+  83%  { transform: translate(2px, -1px)  skewX(0deg); }
+  100% { transform: translate(0, 0)      skewX(0deg); }
 }
 
 body[data-mode="hijack"] .signal-status,
