@@ -4,10 +4,10 @@ Static one-page site for KAstaways (KA Stanford, day party 2026-05-02).
 Lives at <https://kastaway.party> — wristband QR scans land here.
 
 The page presents itself as a shortwave distress-signal terminal from the
-stranded survivors of the **KREWSHIP**. Time-gated transmissions drop on a
-schedule across the two weeks before the party; on each visit, the latest
-transmission types out character-by-character on a black-and-phosphor-green
-terminal, with a live countdown to the next signal.
+stranded survivors of the **KREWSHIP**. Time-gated transmissions drop in the
+week before the party; on each visit, the latest transmission types out
+character-by-character on a black-and-phosphor-green terminal, with a live
+countdown to the next signal.
 
 ## Stack
 
@@ -22,7 +22,7 @@ terminal, with a live countdown to the next signal.
 | `index.html` | shell + DOM mounts |
 | `styles.css` | terminal aesthetic, scanlines, mobile breakpoints, reduced-motion |
 | `transmissions.js` | `TRANSMISSIONS[]` data + key date anchors. **Edit this to change copy.** |
-| `app.js` | typewriter, countdown, supplies bar, day counter, signal log |
+| `app.js` | typewriter, countdown, day counter, signal log, response channel |
 | `vercel.json` | static deploy config + security headers |
 
 ## Editing the copy
@@ -31,15 +31,14 @@ All transmission text lives in `transmissions.js`. The schedule is hard-coded:
 
 | # | Drop time (PT) | Label |
 |---|---|---|
-| T1 | 2026-04-20 12:00 | `SIGNAL_INTERCEPTED` |
-| T2 | 2026-04-23 12:00 | `DAY_3` |
-| T3 | 2026-04-26 12:00 | `FADING` |
-| T4 | 2026-04-28 12:00 | `RESCUE_CANCELLED` |
-| T5 | 2026-05-01 12:00 | `TWENTY_FOUR_HOURS` |
-| T6 | 2026-05-02 14:00 | `THE_RESCUE_IS_ACTIVE` |
-| T7 | 2026-05-04 12:00 | `FINAL_TRANSMISSION` |
+| T1 | 2026-04-25 00:00 | `SIGNAL_INTERCEPTED` |
+| T2 | 2026-04-28 00:00 | `THE_KRAIDERS` |
+| T3 | 2026-04-29 00:00 | `FADING` |
+| T4 | 2026-04-30 00:00 | `YOU_CANT_SAVE_US` |
+| T5 | 2026-05-01 00:00 | `FINAL_BASH` |
+| T6 | 2026-05-02 00:00 | `FINAL_BASH_BEGUN` |
 
-After T7, the signal indicator flatlines to gray and the countdown reads
+After T6, the signal indicator flatlines to gray and the countdown reads
 `SIGNAL TERMINATED`.
 
 ## Local dev
@@ -71,13 +70,12 @@ http://localhost:8080/?t=4   # forces T4
 - First visit: typewriter reveal of current transmission
 - Re-visit (same session): instant render, no typewriter
 - Live 1s countdown to next transmission
-- `SUPPLIES` bar interpolates 100% → 0% from 4/20 noon → 5/2 14:00
 - `DAY N OF ██` counter reads correctly
-- T4 renders the red `RESCUE CANCELLED` stamp
-- T7+: signal indicator + countdown flatline
+- T4 renders the red `COME JOIN US` stamp
+- T6+: signal indicator + countdown flatline
 - Mobile-first; respects `prefers-reduced-motion`
 
 ## Source spec
 
-The full markdown spec lives in the planning Drive at
-`Parties/KAstaways/webpage-spec.md` (v4, 2026-04-25).
+The full markdown spec and story-day planning docs live in the planning Drive at
+`Parties/KAstaways/webpage-spec.md` and `Parties/KAstaways/tmp/story_days/`.

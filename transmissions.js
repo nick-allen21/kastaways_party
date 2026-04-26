@@ -17,14 +17,14 @@ THIS IS THE KAPPA ALPHA ORDER.
 THE KREWSHIP HAS GONE DOWN.
 
 AFTER SAILING AROUND THE WORLD
-WE WERE FINALLY HEADING HOME. 
+WE WERE FINALLY HEADING HOME.
 
 THAT IS WHEN A TERRIBLE STORM HIT.
 
-THE KREWSHIP WENT DOWN. 
+OUR BROTHERS FLEW OVERBOARD
 WE THOUGHT IT WAS THE END.
 
-HOWEVER, OUR LIVES WERE SPARED. 
+HOWEVER, OUR LIVES WERE SPARED.
 
 WE WOKE UP, WASHED ASHORE
 ON AN UNKNOWN ISLAND.
@@ -49,9 +49,9 @@ IS ANYONE RECEIVING THIS?
 PLEASE COME SAVE US.`,
     pacing: {
       0:  { ms: 70, pauseAfter: 400 },  // SOS.
-      12: { ms: 70, pauseAfter: 500 },  // THE KREWSHIP WAS SPLIT IN TWO
-      26: { ms: 70, pauseAfter: 600 },  // IS ANYONE OUT THERE?
-      29: { ms: 70 }                    // PLEASE COME SAVE US.
+      18: { ms: 70, pauseAfter: 500 },  // THE KREWSHIP WAS SPLIT IN TWO
+      32: { ms: 70, pauseAfter: 600 },  // IS ANYONE OUT THERE?
+      35: { ms: 70 }                    // PLEASE COME SAVE US.
     }
   },
 
@@ -174,114 +174,195 @@ COME SAVE US.`,
 
   {
     id: "T4",
-    label: "RESCUE_CANCELLED",
+    label: "YOU_CANT_SAVE_US",
     act: "II",
     dropAt: "2026-04-30T00:00:00-07:00",
-    header: "TRANSMISSION 04 · RESCUE CANCELLED",
-    stamp: "RESCUE CANCELLED",
+    header: "TRANSMISSION 04 · YOU CAN'T SAVE US",
+    stamp: "COME JOIN US",
     body:
 `WE TOOK A VOTE.
 
-NO ONE IS COMING.
-WE KNOW THAT NOW.
+YOU CAN'T SAVE US.
 
-A SLOW DEATH IN A BATTLE OF
-ATTRITION. MINIMUM AURA.
+NOT IN TIME.
 
-INSTEAD —
-WE TAKE EVERYTHING WE HAVE.
-THE RUM. THE WHISKY.
+WE WILL NOT WAIT
+FOR THE KRAIDERS
+TO FINISH THIS.
+
+WE WILL NOT STARVE
+SLOWLY ON THIS BEACH.
+
+SO WE ARE DONE
+TRYING TO SURVIVE.
+
+WE ARE TAKING
+EVERYTHING WE HAVE LEFT.
+
+THE RUM.
+THE WHISKY.
 THE ALEX MANE CHICKEN.
 
-WE THROW ONE LAST BLOWOUT.
+WE ARE THROWING
+ONE LAST BLOWOUT BASH.
 
-THE LAST RAVE ON EARTH.
 SATURDAY. MAY SECOND.
 ON KA ISLAND.
 
-OWN OUR END. MAXIMUM AURA.
+THE LAST PARTY
+OF OUR LIVES.
 
-IF YOU ARE RECEIVING THIS —
-COME FIND US.
+IF YOU ARE RECEIVING THIS,
+IT IS TOO LATE
+TO SAVE US.
 
-NEXT SIGNAL TOMORROW.`,
+BUT IT IS NOT TOO LATE
+TO COME JOIN US.`,
     pacing: {
-      0:  { ms: 70, pauseAfter: 600 },   // WE TOOK A VOTE.
-      2:  { ms: 70, pauseAfter: 1200 },  // NO ONE IS COMING.
-      3:  { ms: 70, pauseAfter: 400 },   // WE KNOW THAT NOW.
-      8:  { ms: 70, pauseAfter: 600 },   // INSTEAD —
-      10: { ms: 18 },                    // THE RUM. THE WHISKY.
-      11: { ms: 18 },                    // THE ALEX MANE CHICKEN.
-      13: { ms: 70, pauseAfter: 800 },   // WE THROW ONE LAST BLOWOUT.
-      19: { ms: 70, pauseAfter: 600 }    // OWN OUR END. MAXIMUM AURA.
+      0:  { ms: 70, pauseAfter: 600 },  // WE TOOK A VOTE.
+      2:  { ms: 70, pauseAfter: 1100 }, // YOU CAN'T SAVE US.
+      4:  { ms: 90, pauseAfter: 700 },  // NOT IN TIME.
+      6:  { ms: 70 },                   // WE WILL NOT WAIT
+      8:  { ms: 70, pauseAfter: 700 },  // TO FINISH THIS.
+      10: { ms: 70 },                   // WE WILL NOT STARVE
+      11: { ms: 70, pauseAfter: 700 },  // SLOWLY ON THIS BEACH.
+      13: { ms: 70 },                   // SO WE ARE DONE
+      14: { ms: 70, pauseAfter: 900 },  // TRYING TO SURVIVE.
+      19: { ms: 18 },                   // THE RUM.
+      20: { ms: 18 },                   // THE WHISKY.
+      21: { ms: 18, pauseAfter: 350 },  // THE ALEX MANE CHICKEN.
+      23: { ms: 70 },                   // WE ARE THROWING
+      24: { ms: 70, pauseAfter: 800 },  // ONE LAST BLOWOUT BASH.
+      29: { ms: 70 },                   // THE LAST PARTY
+      30: { ms: 70, pauseAfter: 700 },  // OF OUR LIVES.
+      34: { ms: 70, pauseAfter: 500 },  // TO SAVE US.
+      36: { ms: 70 },                   // BUT IT IS NOT TOO LATE
+      37: { ms: 70 }                    // TO COME JOIN US.
     }
   },
 
   {
     id: "T5",
-    label: "TWENTY_FOUR_HOURS",
+    label: "FINAL_BASH",
     act: "II→III",
     dropAt: "2026-05-01T00:00:00-07:00",
-    header: "TRANSMISSION 05 · 24 HOURS",
+    header: "TRANSMISSION 05 · FINAL BASH",
     body:
 `IT IS TOMORROW.
 
-THE SUN WILL RISE ONE LAST TIME
-AND THEN IT WILL GO DOWN.
-AND WE WILL GO DOWN WITH IT.
+THE FINAL BASH.
 
-WE BUILT A STAGE
+WE BUILT A MIGHTY STAGE
 FROM THE BONES OF THE KREWSHIP.
-THE PLEDIGTOS WHO BUILT HER
-ARE TEARING HER APART.
 
-THE KARAIDERS HAVE GONE QUIET.
-WE THINK THEY ARE WAITING TOO.
+THE WHOLE BEACH IS SHAKING.
 
-COME AT TWO PM.
-DRESS FOR THE BEACH.
-BRING A BORG.
+RUMS GALORE.
+WHISKY TOO.
 
-SEE YOU ON THE ISLAND.`,
+WE WILL SING SEA SHANTIES
+ALL DAY.
+
+WE WILL PLAY MUSIC
+UNTIL THE ISLAND
+CAN HEAR US DIE.
+
+IF ANYONE IS GETTING
+THIS MESSAGE —
+
+IF ANYONE CAN HEAR US —
+
+COME TOMORROW.
+COME JOIN US
+FOR THE FINAL BASH.`,
     pacing: {
       0:  { ms: 70, pauseAfter: 800 },  // IT IS TOMORROW.
-      4:  { ms: 70, pauseAfter: 800 },  // AND WE WILL GO DOWN WITH IT.
-      14: { ms: 18 },                   // COME AT TWO PM.
-      15: { ms: 18 },                   // DRESS FOR THE BEACH.
-      16: { ms: 18, pauseAfter: 400 },  // BRING A BORG.
-      18: { ms: 70 }                    // SEE YOU ON THE ISLAND.
+      2:  { ms: 70, pauseAfter: 600 },  // THE FINAL BASH.
+      4:  { ms: 70 },                   // WE BUILT A MIGHTY STAGE
+      5:  { ms: 70, pauseAfter: 700 },  // FROM THE BONES OF THE KREWSHIP.
+      7:  { ms: 18, pauseAfter: 300 },  // THE WHOLE BEACH IS SHAKING.
+      9:  { ms: 18 },                   // RUMS GALORE.
+      10: { ms: 18, pauseAfter: 300 },  // WHISKY TOO.
+      12: { ms: 24 },                   // WE WILL SING SEA SHANTIES
+      13: { ms: 24, pauseAfter: 400 },  // ALL DAY.
+      15: { ms: 70 },                   // WE WILL PLAY MUSIC
+      17: { ms: 70, pauseAfter: 900 },  // CAN HEAR US DIE.
+      19: { ms: 70 },                   // IF ANYONE IS GETTING
+      22: { ms: 70, pauseAfter: 500 },  // IF ANYONE CAN HEAR US —
+      24: { ms: 70, pauseAfter: 400 },  // COME TOMORROW.
+      25: { ms: 70 },                   // COME JOIN US
+      26: { ms: 70 }                    // FOR THE FINAL BASH.
     }
   },
 
   {
     id: "T6",
-    label: "FINAL_TRANSMISSION",
+    label: "FINAL_BASH_BEGUN",
     act: "III",
     dropAt: "2026-05-02T00:00:00-07:00",
-    header: "FINAL TRANSMISSION · SIGNAL TERMINATED",
+    header: "FINAL TRANSMISSION · THE FINAL BASH HAS BEGUN",
     body:
-`SIGNAL LOCKED.
+`THE FINAL BASH HAS BEGUN.
 
-YOU ARE THE RESCUE.
-YOU FOUND US.
-IT DOES NOT MATTER ANYMORE.
+THE RUM IS ALREADY FLOWING.
+THE MUSIC IS ALREADY PLAYING.
 
-THE BYTES ARE GONE.
-FILIP'S MAC MINI HAS DIED.
+WE ARE DANCING
+ON THE REMNANTS
+OF THE KREWSHIP.
 
-IF YOU ARE RECEIVING THIS,
-YOU ARE ALREADY ON THE WAY.
+THE STAGE IS SHAKING.
+THE WHOLE BEACH IS SHAKING.
 
-THE LAST RAVE HAS BEGUN.
+WE DO NOT WANT
+TO BE SAVED.
+
+NOT ANYMORE.
+
+THIS IS NO LONGER AN SOS.
+
+THIS IS AN INVITATION
+TO THE PARTY OF A LIFETIME.
+
+COME JOIN THE ORDER
+ON OUR LAST DAY.
+
+THE LAST BASH
+KA ISLAND WILL EVER SEE.
+
+THE LAST BASH
+KA WILL EVER SEE.
+
+COME JOIN US HERE.
+
+THIS IS A PARTY
+FOR THE AGES.
 
 KAPPA ALPHA · OUT.`,
     pacing: {
-      0:  { ms: 70, pauseAfter: 1000 }, // SIGNAL LOCKED.
-      2:  { ms: 70, pauseAfter: 600 },  // YOU ARE THE RESCUE.
-      3:  { ms: 70, pauseAfter: 600 },  // YOU FOUND US.
-      4:  { ms: 70, pauseAfter: 1500 }, // IT DOES NOT MATTER ANYMORE.
-      12: { ms: 70, pauseAfter: 800 },  // THE LAST RAVE HAS BEGUN.
-      14: { ms: 90 }                    // KAPPA ALPHA · OUT.
+      0:  { ms: 70, pauseAfter: 1000 }, // THE FINAL BASH HAS BEGUN.
+      2:  { ms: 24 },                   // THE RUM IS ALREADY FLOWING.
+      3:  { ms: 24, pauseAfter: 400 },  // THE MUSIC IS ALREADY PLAYING.
+      5:  { ms: 70 },                   // WE ARE DANCING
+      7:  { ms: 70, pauseAfter: 700 },  // OF THE KREWSHIP.
+      9:  { ms: 18 },                   // THE STAGE IS SHAKING.
+      10: { ms: 18, pauseAfter: 500 },  // THE WHOLE BEACH IS SHAKING.
+      12: { ms: 70 },                   // WE DO NOT WANT
+      13: { ms: 70, pauseAfter: 600 },  // TO BE SAVED.
+      15: { ms: 90, pauseAfter: 800 },  // NOT ANYMORE.
+      17: { ms: 70, pauseAfter: 700 },  // THIS IS NO LONGER AN SOS.
+      19: { ms: 70 },                   // THIS IS AN INVITATION
+      20: { ms: 70, pauseAfter: 700 },  // TO THE PARTY OF A LIFETIME.
+      22: { ms: 70 },                   // COME JOIN THE ORDER
+      23: { ms: 70, pauseAfter: 700 },  // ON OUR LAST DAY.
+      25: { ms: 70 },                   // THE LAST BASH
+      26: { ms: 70, pauseAfter: 600 },  // KA ISLAND WILL EVER SEE.
+      28: { ms: 70 },                   // THE LAST BASH
+      29: { ms: 70, pauseAfter: 600 },  // KA WILL EVER SEE.
+      31: { ms: 70, pauseAfter: 700 },  // COME JOIN US HERE.
+      33: { ms: 70 },                   // THIS IS A PARTY
+      34: { ms: 70, pauseAfter: 900 },  // FOR THE AGES.
+      36: { ms: 90 }                    // KAPPA ALPHA · OUT.
     }
   }
 ];

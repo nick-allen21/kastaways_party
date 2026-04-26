@@ -60,6 +60,7 @@
   const respondClosedEl  = $("respond-closed");
   const respondHandleRowEl  = $("respond-handle-row");
   const respondHandleEl     = $("respond-handle");
+  const ctaRescueEl      = $("cta-rescue");
 
   // v21 — KARAIDER INTERCEPT overlay refs
   const hijackFlashEl     = $("hijack-flash");
@@ -426,11 +427,22 @@
     } catch (_) { /* noop */ }
   }
 
+  function updateCtaForTransmission(transmission) {
+    if (!ctaRescueEl || !transmission) return;
+    const isInvitationPhase = ["T4", "T5", "T6"].includes(transmission.id);
+    ctaRescueEl.textContent = isInvitationPhase ? "[ COME JOIN US ]" : "[ COME SAVE US ]";
+    ctaRescueEl.setAttribute(
+      "aria-label",
+      isInvitationPhase ? "Come join us — RSVP on Partiful" : "Come save us — RSVP on Partiful"
+    );
+  }
+
   async function renderTransmission(transmission, opts) {
     opts = opts || {};
     const forceInstant = !!opts.instant;
 
     headerEl.textContent = transmission.header;
+    updateCtaForTransmission(transmission);
 
     if (transmission.stamp) {
       stampEl.textContent = transmission.stamp;
