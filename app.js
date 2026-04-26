@@ -804,14 +804,14 @@
     "      |   ..  PALMS  .. |",
     "      |                 |",
     "      |    ##########   |",
-    "      |    ##  [X]  ##  |  <- bow",
+    "      |    ##  [X]  ##  |  <- \"stage\"",
     "      |    ##       ##  |",
     "      |    ##       ##  |",
     "      |    ##       ##  |",
     "      |    ##       ##  |",
     "      |    ##########   |",
     "      |                 |",
-    "      |  KARAIDER LINE  |",
+    "      |    entrance     |",
     "      +-----------------+"
   ].join("\n");
 
@@ -827,7 +827,7 @@
     "we screamed for help into the same dead air.",
     "no one came.",
     "",
-    "we ate what we could.",
+    "we took what we could.",
     "we drank what was left.",
     "we became this place.",
     "",
@@ -841,7 +841,7 @@
     "",
     KARAIDER_MAP_ASCII,
     "",
-    "X = the chest. under the bones at the bow.",
+    "X = the chest. under their \"stage\".",
     "if you come — you will meet the same fate.",
     "the rum is ours by right.",
     "",
@@ -862,7 +862,7 @@
     "we screamed for help into the same dead air.",
     "no one came.",
     "",
-    "we ate what we could.",
+    "we took what we could.",
     "we drank what was left.",
     "we became this place.",
     "",
@@ -880,7 +880,7 @@
     "",
     KARAIDER_MAP_ASCII,
     "",
-    "X = the chest. under the bones at the bow.",
+    "X = the chest. under their \"stage\".",
     "we are coming for it tonight.",
     "the rum is ours by right.",
     "",
@@ -889,11 +889,12 @@
 
   // The single allowed reply during full takeover always returns one of
   // these. Hardcoded — never an LLM call — so the karaider voice can
-  // never drift.
+  // never drift. Pirate-toned (no eating-people imagery — they're
+  // marooned plunderers, not cannibals).
   const KARAIDER_REPLY_LINES = [
     "STOP TRANSMITTING.",
-    "WE DON'T NEGOTIATE WITH FOOD.",
-    "YOU ARE ALREADY ON THE MENU."
+    "WE DO NOT NEGOTIATE.",
+    "WE ARE ALREADY ON THE BEACH."
   ];
 
   function pickRandomFrom(arr) {
