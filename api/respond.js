@@ -39,6 +39,11 @@
 const MEMBERS = require("./_data/members.js");
 const TOPICS  = require("./_data/topics.js");
 const { getTransmissionContext } = require("./_data/transmissions.js");
+
+const getTopicsForTransmission =
+  typeof TOPICS.getTopicsForTransmission === "function"
+    ? TOPICS.getTopicsForTransmission
+    : () => TOPICS;
 const { checkIntercept }         = require("./_data/karaider.js");
 
 // ----- safety hardening -------------------------------------------------
@@ -339,7 +344,8 @@ module.exports = async function handler(req, res) {
   }
 
   const name  = isFollowUp ? incomingConn : pickRandom(MEMBERS, usedNames);
-  const topic = pickRandom(TOPICS,  usedTopics);
+  const topicPool = getTopicsForTransmission(body.tid);
+  const topic = pickRandom(topicPool,  usedTopics);
 
   const systemPrompt = buildPrompt({ name, topic, receiverName, dayCtx, isFollowUp });
 

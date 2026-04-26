@@ -1,7 +1,8 @@
-// Story-topic pool. The serverless function picks one at random and forces the
-// LLM to talk about ONLY that topic, so replies stay on-narrative. Add/edit
-// freely — the whole pool is fair game per call.
-module.exports = [
+// Story-topic pool. The serverless function picks one at random and uses it as
+// fallback color only when the receiver's message is too empty/vague to drive a
+// direct reply. Keep day-scoped pools spoiler-safe: T1 should not accidentally
+// volunteer Karaiders, "no one is coming", or later bytes/Mac Mini lore.
+const DEFAULT_TOPICS = [
   "the rations running out — the rum, the whisky, the alex mane chicken",
   "the night the karaiders raided camp and slashed half the krew",
   "the moment the krewship hull cracked and the wreck went under",
@@ -20,3 +21,22 @@ module.exports = [
   "you have to find us before may second or it's over",
   "what the borg tastes like on day five of the wreck"
 ];
+
+const TOPICS_BY_TRANSMISSION = {
+  t1: [
+    "the food is soaked, but at least the ocean washed the oil off the alex mane chicken",
+    "finding some water inland after waking up on KA Island",
+    "taking apart pieces of the split krewship for shelter",
+    "believing you are the first settlers on KA Island",
+    "trying to figure out if anyone can hear the SOS",
+    "salvaging supplies while they bob around in the water"
+  ]
+};
+
+function getTopicsForTransmission(tid) {
+  const key = String(tid || "").toLowerCase();
+  return TOPICS_BY_TRANSMISSION[key] || DEFAULT_TOPICS;
+}
+
+module.exports = DEFAULT_TOPICS;
+module.exports.getTopicsForTransmission = getTopicsForTransmission;

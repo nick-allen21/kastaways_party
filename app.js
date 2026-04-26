@@ -843,7 +843,7 @@
     "",
     "X = the chest. under their \"stage\".",
     "if you come — you will meet the same fate.",
-    "the rum is ours by right.",
+    "the treasure is ours by right.",
     "",
     "[ END BROADCAST // DO NOT TRANSMIT BACK ]"
   ].join("\n");
@@ -882,7 +882,7 @@
     "",
     "X = the chest. under their \"stage\".",
     "we are coming for it tonight.",
-    "the rum is ours by right.",
+    "the treasure is ours by right.",
     "",
     "[ END BROADCAST // DO NOT TRANSMIT BACK ]"
   ].join("\n");

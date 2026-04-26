@@ -20,9 +20,9 @@ const TRANSMISSIONS = {
   t1: {
     label: "DAY 1 · just intercepted your signal",
     context:
-      "the krewship went down today on lake lag. lightning hit the mast. the hull cracked. you washed ashore on what you've now named KA Island. filip rigged a hotspot from his mac mini so you could broadcast — bytes are limited. food: maybe a month. water: found some. rescue: unclear. you don't fully understand yet what's coming.",
+      "the krewship wrecked after a terrible storm while the kappa alpha crew was sailing after exploring the world. when you woke up, everyone had washed ashore on an unknown island. the krewship was split in two on the beach. supplies were bobbing in the water and you salvaged what you could. the food is wet, but at least the ocean washed the oil off the alex mane chicken. you found some water inland and have started taking apart pieces of the krewship for shelter. you named the place KA Island because you believe you are its first settlers. you do not know about the karaiders yet. you are broadcasting an SOS and actively asking the receiver to help rescue you.",
     tone:
-      "shock, adrenaline, disbelief that someone HEARD you on the very first day. raw. mayday-energy."
+      "panicked, newly stranded, hopeful that someone can hear you. human SOS energy. answer like rescue is still possible and wanted."
   },
   t2: {
     label: "DAY 2 · the karaiders",
