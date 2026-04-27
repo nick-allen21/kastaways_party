@@ -11,7 +11,7 @@
   const PREFERS_REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const BOOT_PHASES = [
-    { label: "ESTABLISHING SIGNAL...",     barMs: 800 },
+    { label: "ESTABLISHING TRANSMISSION...", barMs: 800 },
     { label: "SCANNING FREQUENCIES...",    barMs: 850 },
     { label: "LOCKING SOURCE: 664.LOMITA.CT.94305", barMs: 750 },
     { label: "DECRYPTING TRANSMISSION...", barMs: 900 }
@@ -547,7 +547,7 @@
     const next = getNextTransmission(now);
 
     if (!next) {
-      countdownLabelEl.textContent = "SIGNAL TERMINATED";
+      countdownLabelEl.textContent = "Transmission Terminated";
       countdownValueEl.textContent = "--:--:--:--";
       countdownEl.dataset.state = "terminated";
       return;
@@ -562,7 +562,7 @@
     const minutes = Math.floor((delta % 3600000) / 60000);
     const seconds = Math.floor((delta % 60000) / 1000);
 
-    countdownLabelEl.textContent = "NEXT SIGNAL IN";
+    countdownLabelEl.textContent = "Check back for the Next Transmission in...";
     countdownValueEl.textContent =
       pad(days) + ":" + pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
     countdownEl.dataset.state = "active";
@@ -583,10 +583,10 @@
     const now = new Date();
     if (now >= SIGNAL_TERMINATED) {
       signalDotEl.dataset.state = "terminated";
-      signalStatusLabelEl.textContent = "SIGNAL STATUS: TERMINATED";
+      signalStatusLabelEl.textContent = "TRANSMISSION STATUS: TERMINATED";
     } else {
       signalDotEl.dataset.state = "active";
-      signalStatusLabelEl.textContent = "SIGNAL STATUS: ACTIVE";
+      signalStatusLabelEl.textContent = "TRANSMISSION STATUS: ACTIVE";
     }
   }
 
@@ -1047,7 +1047,7 @@
     if (!hijackBarsEl || !hijackSpinnersEl) return;
 
     const barSpecs = [
-      { label: "INJECTING SIGNAL...",       ms: 4400, delay:  100 },
+      { label: "INJECTING TRANSMISSION...", ms: 4400, delay:  100 },
       { label: "OVERRIDING FREQUENCY...",   ms: 3700, delay:  500 },
       { label: "LOCATING SOURCE...",        ms: 4900, delay:  300 },
       { label: "PURGING KAPPA ALPHA...",    ms: 4200, delay:  900 }
@@ -1800,7 +1800,7 @@
         entry: {
           meta: "REPLY RECEIVED · CORRUPTED",
           kind: "fail",
-          text: "→ ░░ ?? █▒░ R▚CV F▞IL · SIGNAL LOST"
+          text: "→ ░░ ?? █▒░ R▚CV F▞IL · TRANSMISSION LOST"
         }
       };
     }

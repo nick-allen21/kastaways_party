@@ -9,7 +9,7 @@ window.TRANSMISSIONS = [
     label: "SIGNAL_INTERCEPTED",
     act: "I",
     dropAt: "2026-04-25T00:00:00-07:00",
-    header: "TRANSMISSION 01 · SIGNAL INTERCEPTED · DAY 1",
+    header: "TRANSMISSION 01 · INTERCEPTED · DAY 1",
     body:
 `SOS.
 THIS IS THE KAPPA ALPHA ORDER.

@@ -580,29 +580,22 @@ a { color: var(--green); }
   opacity: 0.75;
 }
 
+/* Single shared meta rule for ALL log entries (sent, recv, fail, etc.).
+   Every meta line — "› NICK ALLEN", "664.LOMITA.CT.94305 / WILL HESP",
+   etc. — renders in the same display font at the same size and weight,
+   no bold, no glow, so the address+name reads as a sharp/strict label
+   rather than a fuzzy mixed-font headline. Prefix vs. name only differ
+   by color so the member name still pops a touch. */
 .respond__entry-meta {
   display: block;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--green-faint);
-  margin-bottom: 2px;
-}
-
-/* For received KA replies, the meta is split into two child spans so the
-   member's broadcast name reads as the headline of the entry. Both halves
-   share the SAME font/size/weight so "664.LOMITA.CT.94305 / GEORGE
-   WEIKSNER" reads as one cohesive headline; the prefix is just slightly
-   dimmer to keep a soft hierarchy between the address and the name. */
-.respond__entry-meta-prefix,
-.respond__entry-meta-name {
   font-family: var(--font-display);
-  font-size: clamp(14px, 3vw, 17px);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 1.1;
-  text-shadow: 0 0 6px rgba(74, 226, 144, 0.45);
+  font-size: clamp(14px, 2.6vw, 16px);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--green-dim);
+  margin-bottom: 4px;
+  line-height: 1.2;
 }
 
 .respond__entry-meta-prefix {
@@ -907,11 +900,13 @@ a { color: var(--green); }
 
 .countdown__label {
   font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.16em;
+  font-size: 13px;
+  letter-spacing: 0.04em;
   color: var(--green-dim);
-  text-transform: uppercase;
   margin-bottom: 8px;
+  /* No text-transform — the active-state copy is intentionally
+     title-cased ("Check back for the Next Transmission in...") to read
+     as a friendly invite rather than a militant uppercase log line. */
 }
 
 .countdown__value {
