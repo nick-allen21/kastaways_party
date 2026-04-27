@@ -135,9 +135,23 @@ function rateLimited(ip) {
 
 function pickRandom(pool, exclude) {
   const blocked = new Set((exclude || []).map((s) => String(s).toLowerCase()));
-  const remaining = pool.filter((x) => !blocked.has(String(x).toLowerCase()));
+  const remaining = pool.filter((x) => !blocked.has(String(memberName(x)).toLowerCase()));
   const src = remaining.length > 0 ? remaining : pool;
   return src[Math.floor(Math.random() * src.length)];
+}
+
+function memberName(member) {
+  return typeof member === "string" ? member : String(member && member.name || "");
+}
+
+function memberPersona(member) {
+  if (!member || typeof member === "string") return "";
+  return String(member.persona || "").trim();
+}
+
+function memberByName(name) {
+  const wanted = String(name || "").toLowerCase();
+  return MEMBERS.find((member) => memberName(member).toLowerCase() === wanted) || null;
 }
 
 function sanitizeReceiverName(s) {
@@ -175,7 +189,7 @@ function sanitizeHistory(raw) {
 
 // ----- system prompt ----------------------------------------------------
 
-function buildPrompt({ name, topic, receiverName, dayCtx, isFollowUp }) {
+function buildPrompt({ name, persona, topic, receiverName, dayCtx, isFollowUp }) {
   const opener = isFollowUp
     ? `You are continuing a fragile shortwave conversation with ${receiverName}, mid-flow. Don't greet them — they're already on the line.`
     : `You have JUST established a fragile shortwave connection with ${receiverName} on the mainland. They are faintly hearing you through static. Open by being excited and relieved that the connection finally worked — like you can't believe someone heard you. Use their name (${receiverName}) once if it sounds natural.`;
@@ -184,6 +198,8 @@ function buildPrompt({ name, topic, receiverName, dayCtx, isFollowUp }) {
 
   return [
     `You are ${name}, a survivor of the wrecked Kappa Alpha expedition marooned on KA Island.`,
+    persona ? `Short personal color for ${name}: ${persona}` : ``,
+    persona ? `Use that personal color ONLY when it feels natural or relevant to what the receiver asked. Do not force it into every reply. For open-ended questions, it can lightly influence what ${name} notices, jokes about, or worries about.` : ``,
     ``,
     `═══ CURRENT SITUATION (${dayCtx.label}) ═══`,
     dayCtx.context,
@@ -301,7 +317,8 @@ module.exports = async function handler(req, res) {
   const usedNames     = Array.isArray(body.usedNames)  ? body.usedNames.slice(0, 32)  : [];
   const usedTopics    = Array.isArray(body.usedTopics) ? body.usedTopics.slice(0, 32) : [];
   const incomingConn  = typeof body.connectedName === "string" ? body.connectedName.trim() : "";
-  const isFollowUp    = !!incomingConn && MEMBERS.indexOf(incomingConn) !== -1;
+  const connectedMember = memberByName(incomingConn);
+  const isFollowUp    = !!connectedMember;
   const history       = isFollowUp ? sanitizeHistory(body.history) : [];
   const dayCtx        = getTransmissionContext(body.tid);
 
@@ -348,11 +365,13 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  const name  = isFollowUp ? incomingConn : pickRandom(MEMBERS, usedNames);
+  const member = isFollowUp ? connectedMember : pickRandom(MEMBERS, usedNames);
+  const name = memberName(member);
+  const persona = memberPersona(member);
   const topicPool = getTopicsForTransmission(body.tid);
   const topic = pickRandom(topicPool,  usedTopics);
 
-  const systemPrompt = buildPrompt({ name, topic, receiverName, dayCtx, isFollowUp });
+  const systemPrompt = buildPrompt({ name, persona, topic, receiverName, dayCtx, isFollowUp });
 
   let reply;
   try {
