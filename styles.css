@@ -591,29 +591,26 @@ a { color: var(--green); }
 }
 
 /* For received KA replies, the meta is split into two child spans so the
-   member's broadcast name reads as the headline of the entry. Prefix
-   keeps the existing tiny-and-dim "664.LOMITA.CT.94305 /" look; name
-   bumps up in size, weight, and brightness so receivers immediately see
-   who's answering them in the log. */
-.respond__entry-meta-prefix {
-  /* Inherit base meta styling — explicit re-statement keeps this rule
-     self-documenting if .respond__entry-meta ever drifts later. */
-  color: var(--green-faint);
-  font-size: 10px;
-}
-
+   member's broadcast name reads as the headline of the entry. Both halves
+   share the SAME font/size/weight so "664.LOMITA.CT.94305 / GEORGE
+   WEIKSNER" reads as one cohesive headline; the prefix is just slightly
+   dimmer to keep a soft hierarchy between the address and the name. */
+.respond__entry-meta-prefix,
 .respond__entry-meta-name {
-  display: inline;
   font-family: var(--font-display);
   font-size: clamp(14px, 3vw, 17px);
   font-weight: 700;
-  color: var(--green);
   letter-spacing: 0.08em;
-  text-shadow: 0 0 6px rgba(74, 226, 144, 0.45);
-  margin-left: 2px;
-  /* Tighter line so the bigger name doesn't blow out the meta row's
-     vertical rhythm relative to neighboring entries. */
   line-height: 1.1;
+  text-shadow: 0 0 6px rgba(74, 226, 144, 0.45);
+}
+
+.respond__entry-meta-prefix {
+  color: var(--green-dim);
+}
+
+.respond__entry-meta-name {
+  color: var(--green);
 }
 
 .respond__form {
