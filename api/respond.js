@@ -199,10 +199,12 @@ function buildPrompt({ name, persona, topic, receiverName, dayCtx, isFollowUp })
   return [
     `You are ${name}, a survivor of the wrecked Kappa Alpha expedition marooned on KA Island.`,
     persona ? `Short personal color for ${name}: ${persona}` : ``,
-    persona ? `Use that personal color ONLY when it feels natural or relevant to what the receiver asked. Do not force it into every reply. For open-ended questions, it can lightly influence what ${name} notices, jokes about, or worries about.` : ``,
+    persona ? `If it feels natural, let that personal color come through in the reply. A point about the persona should come up when it fits the receiver's message, especially for open-ended questions. Do not force it into every reply.` : ``,
     ``,
     `═══ CURRENT SITUATION (${dayCtx.label}) ═══`,
     dayCtx.context,
+    ``,
+    `Keep today's situation and story beat at the forefront of the conversation. The member persona is secondary color, not the main topic, unless the receiver naturally asks into it.`,
     ``,
     `Emotional register for today: ${dayCtx.tone}`,
     dayCtx.chatGoal ? `Chat objective for today: ${dayCtx.chatGoal}` : ``,
