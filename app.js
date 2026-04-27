@@ -519,6 +519,16 @@
     // typing-lock gets cleared once the typewriter finishes.
     respondApplyChannelState();
 
+    // Throb the reply panel to nudge the user toward the form. User testing
+    // had people miss the TRANSMIT REPLY block entirely, so we fire a
+    // breathing pulse the moment the body finishes typing. The damp
+    // listeners in respondInit() clear data-throb on the first interaction
+    // (NAME tap, textarea focus, send press). Skip when the channel is
+    // already closed for this transmission — there's no form to throb.
+    if (respondEl && respondPhase() !== "closed") {
+      respondEl.dataset.throb = "true";
+    }
+
     updateSignalLogActive();
   }
 
@@ -1191,6 +1201,10 @@
     transmissionTyping = false;
     respondInFlight = false;
     respondApplyChannelState();
+
+    // Pulse the panel red (var swap re-tints the throb glow automatically)
+    // so the receiver knows they have one shot to talk back to the karaider.
+    if (respondEl) respondEl.dataset.throb = "true";
   }
 
   // -- Rare interception (Vector B) ----------------------------------------
@@ -1570,7 +1584,27 @@
 
     const meta = document.createElement("span");
     meta.className = "respond__entry-meta";
-    meta.textContent = entry.meta || "";
+    // For received KA replies, the meta is "664.LOMITA.CT.94305 / KA NAME".
+    // Split it into a small/dim prefix and a bigger/bolder name span so the
+    // member's broadcast name pops in the log — that's the part receivers
+    // actually want to see ("oh, GEORGE WEIKSNER answered"), and at the
+    // base 10px meta size it was getting lost. Other kinds keep the flat
+    // single-line look so the user's own "› MAYA" line stays compact.
+    const metaText = entry.meta || "";
+    const slashIdx = entry.kind === "recv" ? metaText.indexOf(" / ") : -1;
+    if (slashIdx !== -1) {
+      const prefix = document.createElement("span");
+      prefix.className = "respond__entry-meta-prefix";
+      prefix.textContent = metaText.slice(0, slashIdx + 3);
+      meta.appendChild(prefix);
+
+      const name = document.createElement("span");
+      name.className = "respond__entry-meta-name";
+      name.textContent = metaText.slice(slashIdx + 3);
+      meta.appendChild(name);
+    } else {
+      meta.textContent = metaText;
+    }
     li.appendChild(meta);
 
     const body = document.createElement("span");
@@ -2035,6 +2069,20 @@
     }
 
     respondFormEl.addEventListener("submit", respondHandleSubmit);
+
+    // Damp the post-typewriter throb on the very first user interaction
+    // with the panel. Delegated on .respond so a tap/focus on the NAME
+    // input, the textarea, or the [ TRANSMIT ] button all kill the pulse —
+    // we don't want it screaming at someone who has clearly engaged.
+    if (respondEl) {
+      const dampThrob = () => {
+        if (respondEl.dataset.throb === "true") {
+          respondEl.dataset.throb = "false";
+        }
+      };
+      respondEl.addEventListener("pointerdown", dampThrob);
+      respondEl.addEventListener("focusin", dampThrob);
+    }
 
     if (respondHandleEl) {
       respondHandleEl.addEventListener("input", respondOnHandleInput);
