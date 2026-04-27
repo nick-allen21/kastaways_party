@@ -131,8 +131,8 @@ WHERE ARE YOU GUYS!??!?!
 THE KRAIDERS ARE OUT THERE.
 
 PARANOIA HAS SET IN.
-WE WATCH THE TREE LINE.
 WE CAN HEAR THEM IN THE TREES.
+WE WATCH THE LINE ALL DAY.
 
 FOOD IS SCARCE.
 WATER IS WORSE.
@@ -248,50 +248,50 @@ TO COME JOIN US.`,
     dropAt: "2026-05-01T00:00:00-07:00",
     header: "TRANSMISSION 05 · FINAL BASH",
     body:
-`IT IS TOMORROW.
+`IT IS TOMORROW!!! 🎉
 
-THE FINAL BASH.
+THE FINAL BASH. 🥳
 
 WE BUILT A MIGHTY STAGE
-FROM THE BONES OF THE KREWSHIP.
+FROM THE BONES OF THE KREWSHIP. 🔨
 
-THE WHOLE BEACH IS SHAKING.
+THE WHOLE BEACH IS SHAKING!!! ⚡
 
-RUMS GALORE.
-WHISKY TOO.
+RUMS GALORE. 🍹
+WHISKY TOO. 🥃
 
 WE WILL SING SEA SHANTIES
-ALL DAY.
+ALL DAY. 🎶
 
 WE WILL PLAY MUSIC
 UNTIL THE ISLAND
-CAN HEAR US DIE.
+CAN HEAR US DIE!!! 🔊
 
 IF ANYONE IS GETTING
 THIS MESSAGE —
 
 IF ANYONE CAN HEAR US —
 
-COME TOMORROW.
+COME TOMORROW!!! 🏝️
 COME JOIN US
-FOR THE FINAL BASH.`,
+FOR THE FINAL BASH!!! 🎉`,
     pacing: {
-      0:  { ms: 70, pauseAfter: 800 },  // IT IS TOMORROW.
-      2:  { ms: 70, pauseAfter: 600 },  // THE FINAL BASH.
-      4:  { ms: 70 },                   // WE BUILT A MIGHTY STAGE
-      5:  { ms: 70, pauseAfter: 700 },  // FROM THE BONES OF THE KREWSHIP.
-      7:  { ms: 18, pauseAfter: 300 },  // THE WHOLE BEACH IS SHAKING.
-      9:  { ms: 18 },                   // RUMS GALORE.
-      10: { ms: 18, pauseAfter: 300 },  // WHISKY TOO.
-      12: { ms: 24 },                   // WE WILL SING SEA SHANTIES
-      13: { ms: 24, pauseAfter: 400 },  // ALL DAY.
-      15: { ms: 70 },                   // WE WILL PLAY MUSIC
-      17: { ms: 70, pauseAfter: 900 },  // CAN HEAR US DIE.
-      19: { ms: 70 },                   // IF ANYONE IS GETTING
-      22: { ms: 70, pauseAfter: 500 },  // IF ANYONE CAN HEAR US —
-      24: { ms: 70, pauseAfter: 400 },  // COME TOMORROW.
-      25: { ms: 70 },                   // COME JOIN US
-      26: { ms: 70 }                    // FOR THE FINAL BASH.
+      0:  { ms: 55, pauseAfter: 500 },  // IT IS TOMORROW!!!
+      2:  { ms: 48, pauseAfter: 450 },  // THE FINAL BASH.
+      4:  { ms: 48 },                   // WE BUILT A MIGHTY STAGE
+      5:  { ms: 48, pauseAfter: 500 },  // FROM THE BONES OF THE KREWSHIP.
+      7:  { ms: 28, pauseAfter: 260 },  // THE WHOLE BEACH IS SHAKING!!!
+      9:  { ms: 28 },                   // RUMS GALORE.
+      10: { ms: 28, pauseAfter: 260 },  // WHISKY TOO.
+      12: { ms: 32 },                   // WE WILL SING SEA SHANTIES
+      13: { ms: 32, pauseAfter: 300 },  // ALL DAY.
+      15: { ms: 48 },                   // WE WILL PLAY MUSIC
+      17: { ms: 48, pauseAfter: 650 },  // CAN HEAR US DIE!!!
+      19: { ms: 50 },                   // IF ANYONE IS GETTING
+      22: { ms: 50, pauseAfter: 350 },  // IF ANYONE CAN HEAR US —
+      24: { ms: 42, pauseAfter: 300 },  // COME TOMORROW!!!
+      25: { ms: 42 },                   // COME JOIN US
+      26: { ms: 42 }                    // FOR THE FINAL BASH!!!
     }
   },
 

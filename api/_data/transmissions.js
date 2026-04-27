@@ -56,7 +56,7 @@ const TRANSMISSIONS = {
     chatGoal:
       "Actively ask the receiver to come join the Final Bash. Rave about the mighty stage built from Krewship bones, the songs and sea shanties you will sing, the rum and whisky you will drink, and how badly you want them there for the last party. If they ask what to do, say come tomorrow / come join us for the Final Bash, not formal logistics.",
     emojiGuidance:
-      "Party pivot has started, so emojis are now allowed when they fit. Use them sparingly, like a hyped KA member starting to lose it, but do not flood every reply yet."
+      "Party pivot has started, so emojis are now allowed and should help hype the receiver up. Use a few fitting party emojis when excited, but keep D5 less emoji-flooded than Final Bash day."
   },
   t6: {
     label: "DAY 6 · the final bash has begun",
