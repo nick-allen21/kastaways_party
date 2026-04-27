@@ -901,8 +901,9 @@ a { color: var(--green); }
 .countdown__label {
   font-family: var(--font-mono);
   font-size: 13px;
+  font-weight: 700;
   letter-spacing: 0.04em;
-  color: var(--green-dim);
+  color: var(--green);
   margin-bottom: 8px;
   /* No text-transform — the active-state copy is intentionally
      title-cased ("Check back for the Next Transmission in...") to read
