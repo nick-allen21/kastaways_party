@@ -1372,7 +1372,7 @@
       connected: "where did they come from?"
     },
     T3: {
-      first: "can you hear them in the trees?",
+      first: "are you guys alive???",
       connected: "are you still holding the line?"
     },
     T4: {
