@@ -156,7 +156,13 @@ UNSPEAKABLE THOUGHTS ARE EMERGING.
 
 PLEASE.
 IF YOU ARE RECEIVING THIS,
-COME SAVE US.`,
+COME SAVE US ON MAY 2ND.
+
+WE DON'T HAVE ENOUGH FOOD TO MAKE IT 
+
+PAST 
+MAY 
+2ND!!!!!!!!!!!!!!`,
     pacing: {
       0:  { ms: 70, pauseAfter: 600 },  // THREE DAYS SINCE THE WRECK.
       2:  { ms: 18, pauseAfter: 400 },  // WHERE ARE YOU GUYS!??!?!
