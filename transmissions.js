@@ -196,8 +196,9 @@ MAY 2ND!!!!!!!!!!!!!!`,
 
 IT'S TOO LATE FOR US
 
-AFTER CRASHING ON AN UNKNOWN ISLAND
+AFTER SAILING THE WORLD 
 AFTER THE STORM
+AFTER CRASHING ON AN UNKNOWN ISLAND
 
 WE TRIED RATIONING 
 WE TRIED FIGHTING OFF THE RAIDERS
@@ -250,25 +251,24 @@ FOR THE LAST DAY OF OUR LIVES!!!!!
 
 FOR THE BLOWOUT BASHHHHHHHHH!!!
 
-
 MAY 2ND. KAPPA ALPHA. THE LAST BASH.
-.`,
+🎉🎉🎉🎉🎉🎉🎉🎉🎉`,
     pacing: {
-      0:  { ms: 82, pauseAfter: 900 },  // WE TOOK A VOTE.
-      2:  { ms: 88, pauseAfter: 900 },  // IT'S TOO LATE FOR US
-      4:  { ms: 82 },                   // AFTER CRASHING...
-      5:  { ms: 82, pauseAfter: 650 },  // AFTER THE STORM
-      7:  { ms: 76 },                   // WE TRIED RATIONING
-      8:  { ms: 76 },                   // WE TRIED FIGHTING...
-      9:  { ms: 76, pauseAfter: 800 },  // WE TRIED SURVIVAL
-      11: { ms: 82, pauseAfter: 450 },  // HOWEVER, WE'VE DECIDED
-      12: { ms: 72 },
-      13: { ms: 72 },
-      14: { ms: 72, pauseAfter: 550 },
-      16: { ms: 72 },
-      17: { ms: 72, pauseAfter: 650 },
-      19: { ms: 76 },
-      20: { ms: 76, pauseAfter: 900 },  // TRYING TO SURVIVE.
+      0:  { ms: 70, pauseAfter: 650 },  // WE TOOK A VOTE.
+      2:  { ms: 74, pauseAfter: 650 },  // IT'S TOO LATE FOR US
+      4:  { ms: 70 },                   // AFTER CRASHING...
+      5:  { ms: 70, pauseAfter: 450 },  // AFTER THE STORM
+      7:  { ms: 64 },                   // WE TRIED RATIONING
+      8:  { ms: 64 },                   // WE TRIED FIGHTING...
+      9:  { ms: 64, pauseAfter: 550 },  // WE TRIED SURVIVAL
+      11: { ms: 70, pauseAfter: 350 },  // HOWEVER, WE'VE DECIDED
+      12: { ms: 62 },
+      13: { ms: 62 },
+      14: { ms: 62, pauseAfter: 420 },
+      16: { ms: 62 },
+      17: { ms: 62, pauseAfter: 500 },
+      19: { ms: 64 },
+      20: { ms: 64, pauseAfter: 650 },  // TRYING TO SURVIVE.
       22: { ms: 54 },                   // INSTEAD...
       23: { ms: 48 },
       24: { ms: 42, pauseAfter: 300 },
