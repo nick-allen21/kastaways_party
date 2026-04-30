@@ -39,7 +39,7 @@ const TRANSMISSIONS = {
       "starving, paranoid, ashamed of what hunger is doing to everyone, but trying to stay loyal. grim restraint with flashes of gallows humor only when it sounds like coping."
   },
   t4: {
-    label: "DAY 4 · you can't save us",
+    label: "DAY 4 · don't save us",
     context:
       "the krew took a vote. after the KrAider attacks and days of hunger, you no longer believe the receiver can save you in time. you do not want to wait for a slow death by starvation or for the KrAiders to finish you. you are done trying to survive. instead, you are taking everything left — the rum, the whisky, the alex mane chicken, every last piece of food and drink — and throwing one last Blowout Bash on saturday may second, on KA Island. it is too late for the receiver to save you, but not too late for them to come join the last party of your lives.",
     tone:

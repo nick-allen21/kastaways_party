@@ -48,7 +48,7 @@ const TOPICS_BY_TRANSMISSION = {
   ],
   t4: [
     "taking a vote and deciding survival is over",
-    "you can't save us, not in time",
+    "don't save us; it is not in time",
     "not waiting for the KrAiders or starvation to finish the krew",
     "taking everything left for one last Blowout Bash",
     "the rum, the whisky, and the alex mane chicken",

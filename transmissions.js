@@ -186,10 +186,10 @@ MAY 2ND!!!!!!!!!!!!!!`,
 
   {
     id: "T4",
-    label: "YOU_CANT_SAVE_US",
+    label: "DONT_SAVE_US",
     act: "II",
     dropAt: "2026-04-30T00:00:00-07:00",
-    header: "TRANSMISSION 04 · YOU CAN'T SAVE US",
+    header: "TRANSMISSION 04 · DON'T SAVE US",
     stamp: "COME JOIN US ‼️‼️",
     body:
 `WE TOOK A VOTE.
@@ -244,6 +244,7 @@ IF YOU ARE RECEIVING THIS
 DON'T COME TO THE ISLAND 
 
 TO SAVE US
+WE NO LONGER WANT TO BE SAVED!!
 
 COME TO THE ISLAND
 
@@ -308,23 +309,24 @@ MAY 2ND. KAPPA ALPHA. THE LAST BASH.
       48: { ms: 44, pauseAfter: 300 },
       49: { ms: 28, pauseAfter: 250 },
       51: { ms: 44, pauseAfter: 300 },
-      53: { ms: 24, pauseAfter: 120 },
-      55: { ms: 16, pauseAfter: 250 },
-      57: { ms: 12 },
-      58: { ms: 12, pauseAfter: 360 },
-      60: { ms: 12 },
-      61: { ms: 12, pauseAfter: 360 },
-      63: { ms: 24 },
-      64: { ms: 24, pauseAfter: 300 },
-      66: { ms: 24 },
-      67: { ms: 16 },
-      68: { ms: 14, pauseAfter: 300 },
-      70: { ms: 24 },
-      71: { ms: 18 },
-      72: { ms: 14, pauseAfter: 300 },
-      74: { ms: 16, pauseAfter: 260 },
-      76: { ms: 20 },
-      77: { ms: 120 }
+      52: { ms: 32, pauseAfter: 260 },
+      54: { ms: 24, pauseAfter: 120 },
+      56: { ms: 16, pauseAfter: 250 },
+      58: { ms: 12 },
+      59: { ms: 12, pauseAfter: 360 },
+      61: { ms: 12 },
+      62: { ms: 12, pauseAfter: 360 },
+      64: { ms: 24 },
+      65: { ms: 24, pauseAfter: 300 },
+      67: { ms: 24 },
+      68: { ms: 16 },
+      69: { ms: 14, pauseAfter: 300 },
+      71: { ms: 24 },
+      72: { ms: 18 },
+      73: { ms: 14, pauseAfter: 300 },
+      75: { ms: 16, pauseAfter: 260 },
+      77: { ms: 20 },
+      78: { ms: 120 }
     }
   },
 

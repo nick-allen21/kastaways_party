@@ -35,7 +35,7 @@ All transmission text lives in `transmissions.js`. The schedule is hard-coded:
 | T1 | 2026-04-25 00:00 | `SIGNAL_INTERCEPTED` |
 | T2 | 2026-04-28 00:00 | `THE_KRAIDERS` |
 | T3 | 2026-04-29 00:00 | `FADING` |
-| T4 | 2026-04-30 00:00 | `YOU_CANT_SAVE_US` |
+| T4 | 2026-04-30 00:00 | `DONT_SAVE_US` |
 | T5 | 2026-05-01 00:00 | `FINAL_BASH` |
 | T6 | 2026-05-02 00:00 | `FINAL_BASH_BEGUN` |
 
