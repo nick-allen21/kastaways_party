@@ -269,7 +269,7 @@ THE BLOWOUT DARTY WITH US.
 
 TO THE BLOWOUT BASHHHHHHHHH!!!
 
-🏝️MAY 2ND. KAPPA ALPHA. KASTAWAYS🏝️
+🏝️MAY 2ND. KAPPA ALPHA. KASTAWAYS.🏝️
 🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉`,
     pacing: {
       0:  { ms: 70, pauseAfter: 650 },  // WE TOOK A VOTE.
