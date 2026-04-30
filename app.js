@@ -1357,7 +1357,7 @@
   const RESPOND_RATES = {
     T1: { first: 0.35, follow: 0.50 },
     T2: { first: 0.45, follow: 0.50 },
-    T3: { first: 0.50, follow: 0.60 },
+    T3: { first: 0.40, follow: 0.50 },
     T4: { first: 0.65, follow: 0.60 },
     T5: { first: 0.70, follow: 0.70 },
     T6: { first: 1.00, follow: 1.00 }

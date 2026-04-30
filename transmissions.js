@@ -160,6 +160,9 @@ TO THE KREW.
 UNSPEAKABLE THOUGHTS ARE EMERGING.
 
 PLEASE.
+
+IS ANYONE THERE !?!?
+
 IF YOU ARE RECEIVING THIS,
 COME SAVE US BY MAY 2ND.
 
@@ -191,12 +194,18 @@ MAY 2ND!!!!!!!!!!!!!!`,
     body:
 `WE TOOK A VOTE.
 
-YOU CAN'T SAVE US.
+IT'S TOO LATE FOR US
 
-NOT IN TIME.
+AFTER CRASHING ON AN UNKNOWN ISLAND
+AFTER THE STORM
 
+WE TRIED RATIONING 
+WE TRIED FIGHTING OFF THE RAIDERS
+WE TRIED SURVIVAL
+
+HOWEVER, WE'VE DECIDED 
 WE WILL NOT WAIT
-FOR THE KRAIDERS
+FOR THE RAIDERS
 TO FINISH THIS.
 
 WE WILL NOT STARVE
@@ -205,48 +214,87 @@ SLOWLY ON THIS BEACH.
 SO WE ARE DONE
 TRYING TO SURVIVE.
 
-WE ARE TAKING
-EVERYTHING WE HAVE LEFT.
+INSTEAD, THE KAPPA ALPHA ORDER 
+WILL BE TAKING EVERYTHING WE HAVE LEFT
+ALL OF OUR REMAINING RESOURCES...
 
-THE RUM.
-THE WHISKY.
-THE ALEX MANE CHICKEN.
+ALL THE RUM. 🍹
+ALL THE WHISKY. 🥃
+ALL THE ALEX MANE CHICKEN. 🍗
+
+AND WITH IT
 
 WE ARE THROWING
-ONE LAST BLOWOUT BASH.
+ONE. 
+LAST.
+PARTY.
 
-SATURDAY. MAY SECOND.
-ON KA ISLAND.
+SATURDAY!!! 
+MAY SECOND!!!
+ON KA ISLAND !!!!
 
-THE LAST PARTY
-OF OUR LIVES.
+WE ARE THROWING THE BLOWOUT BASH
+OF OUR LIVES 🎉
 
-IF YOU ARE RECEIVING THIS,
-IT IS TOO LATE
-TO SAVE US.
+IF YOU ARE RECEIVING THIS
+DON'T COME TO THE ISLAND 
 
-BUT IT IS NOT TOO LATE
-TO COME JOIN US.`,
+TO SAVE US
+
+COME TO THE ISLAND
+
+TO JOIN US!!!!
+
+FOR THE LAST PARTY OF OUR LIVES
+FOR THE LAST DAY OF OUR LIVES!!!!!
+
+FOR THE BLOWOUT BASHHHHHHHHH!!!
+
+
+MAY 2ND. KAPPA ALPHA. THE LAST BASH.
+.`,
     pacing: {
-      0:  { ms: 70, pauseAfter: 600 },  // WE TOOK A VOTE.
-      2:  { ms: 70, pauseAfter: 1100 }, // YOU CAN'T SAVE US.
-      4:  { ms: 90, pauseAfter: 700 },  // NOT IN TIME.
-      6:  { ms: 70 },                   // WE WILL NOT WAIT
-      8:  { ms: 70, pauseAfter: 700 },  // TO FINISH THIS.
-      10: { ms: 70 },                   // WE WILL NOT STARVE
-      11: { ms: 70, pauseAfter: 700 },  // SLOWLY ON THIS BEACH.
-      13: { ms: 70 },                   // SO WE ARE DONE
-      14: { ms: 70, pauseAfter: 900 },  // TRYING TO SURVIVE.
-      19: { ms: 18 },                   // THE RUM.
-      20: { ms: 18 },                   // THE WHISKY.
-      21: { ms: 18, pauseAfter: 350 },  // THE ALEX MANE CHICKEN.
-      23: { ms: 70 },                   // WE ARE THROWING
-      24: { ms: 70, pauseAfter: 800 },  // ONE LAST BLOWOUT BASH.
-      29: { ms: 70 },                   // THE LAST PARTY
-      30: { ms: 70, pauseAfter: 700 },  // OF OUR LIVES.
-      34: { ms: 70, pauseAfter: 500 },  // TO SAVE US.
-      36: { ms: 70 },                   // BUT IT IS NOT TOO LATE
-      37: { ms: 70 }                    // TO COME JOIN US.
+      0:  { ms: 82, pauseAfter: 900 },  // WE TOOK A VOTE.
+      2:  { ms: 88, pauseAfter: 900 },  // IT'S TOO LATE FOR US
+      4:  { ms: 82 },                   // AFTER CRASHING...
+      5:  { ms: 82, pauseAfter: 650 },  // AFTER THE STORM
+      7:  { ms: 76 },                   // WE TRIED RATIONING
+      8:  { ms: 76 },                   // WE TRIED FIGHTING...
+      9:  { ms: 76, pauseAfter: 800 },  // WE TRIED SURVIVAL
+      11: { ms: 82, pauseAfter: 450 },  // HOWEVER, WE'VE DECIDED
+      12: { ms: 72 },
+      13: { ms: 72 },
+      14: { ms: 72, pauseAfter: 550 },
+      16: { ms: 72 },
+      17: { ms: 72, pauseAfter: 650 },
+      19: { ms: 76 },
+      20: { ms: 76, pauseAfter: 900 },  // TRYING TO SURVIVE.
+      22: { ms: 54 },                   // INSTEAD...
+      23: { ms: 48 },
+      24: { ms: 42, pauseAfter: 300 },
+      26: { ms: 22 },
+      27: { ms: 22 },
+      28: { ms: 22, pauseAfter: 250 },
+      30: { ms: 38, pauseAfter: 220 },
+      32: { ms: 28 },
+      33: { ms: 58, pauseAfter: 180 },
+      34: { ms: 58, pauseAfter: 180 },
+      35: { ms: 32, pauseAfter: 350 },
+      37: { ms: 20 },
+      38: { ms: 20 },
+      39: { ms: 20, pauseAfter: 260 },
+      41: { ms: 18 },
+      42: { ms: 14, pauseAfter: 300 },
+      44: { ms: 28 },
+      45: { ms: 28, pauseAfter: 250 },
+      47: { ms: 44, pauseAfter: 300 },
+      49: { ms: 24, pauseAfter: 120 },
+      51: { ms: 16, pauseAfter: 260 },
+      53: { ms: 18 },
+      54: { ms: 16, pauseAfter: 250 },
+      56: { ms: 12, pauseAfter: 360 },
+      59: { ms: 20 },
+      60: { ms: 120 }
     }
   },
 
