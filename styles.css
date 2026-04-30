@@ -285,7 +285,7 @@ a { color: var(--green); }
   border: 3px solid var(--red);
   color: var(--red);
   font-family: var(--font-display);
-  font-size: clamp(20px, 4vw, 32px);
+  font-size: clamp(22px, 4.6vw, 38px);
   letter-spacing: 0.08em;
   padding: 4px 14px;
   text-transform: uppercase;
@@ -1046,12 +1046,12 @@ a { color: var(--green); }
   max-width: var(--max-width);
   margin: 0 auto;
   padding:
-    18px
+    20px
     max(var(--pad), env(safe-area-inset-right))
-    18px
+    20px
     max(var(--pad), env(safe-area-inset-left));
   font-family: var(--font-display);
-  font-size: clamp(20px, 5vw, 28px);
+  font-size: clamp(22px, 5.8vw, 34px);
   letter-spacing: 0.16em;
   text-align: center;
   text-decoration: none;

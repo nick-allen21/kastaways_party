@@ -190,7 +190,7 @@ MAY 2ND!!!!!!!!!!!!!!`,
     act: "II",
     dropAt: "2026-04-30T00:00:00-07:00",
     header: "TRANSMISSION 04 · YOU CAN'T SAVE US",
-    stamp: "COME JOIN US",
+    stamp: "COME JOIN US ‼️‼️",
     body:
 `WE TOOK A VOTE.
 

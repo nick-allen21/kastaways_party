@@ -430,7 +430,7 @@
   function updateCtaForTransmission(transmission) {
     if (!ctaRescueEl || !transmission) return;
     const isInvitationPhase = ["T4", "T5", "T6"].includes(transmission.id);
-    ctaRescueEl.textContent = isInvitationPhase ? "[ COME JOIN US ]" : "[ COME SAVE US ]";
+    ctaRescueEl.textContent = isInvitationPhase ? "[ COME JOIN US ‼️‼️ ]" : "[ COME SAVE US ]";
     ctaRescueEl.setAttribute(
       "aria-label",
       isInvitationPhase ? "Come join us — RSVP on Partiful" : "Come save us — RSVP on Partiful"
@@ -722,7 +722,7 @@
   // ---------------------------------------------------------------
   // Periodic CRT glitches
   // ---------------------------------------------------------------
-  // Every 8-22s a random glitch fires: brief RGB chromatic split on the
+  // Every 1-3s a random glitch fires: brief RGB chromatic split on the
   // transmission text, a whole-page slip with hue rotation, or a "signal
   // loss" full-screen static flash. Disabled under prefers-reduced-motion.
 
@@ -796,13 +796,13 @@
       if (document.visibilityState === "visible") {
         fireRandomGlitch();
       }
-      scheduleNextGlitch(5000, 10000);
+      scheduleNextGlitch(1000, 3000);
     }, wait);
   }
 
   function startGlitchLoop() {
     if (PREFERS_REDUCED_MOTION) return;
-    scheduleNextGlitch(2000, 4000);
+    scheduleNextGlitch(1000, 3000);
   }
 
   // Debug hook: window.__glitch("rgb"|"slip"|"loss"|"stutter") to fire on demand.
