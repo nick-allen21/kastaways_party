@@ -237,6 +237,9 @@ ON KA ISLAND !!!!
 WE ARE THROWING THE BLOWOUT BASH
 OF OUR LIVES 🎉
 
+WE ARE GIVING UP ON SURVIVAL 
+AND GOING OUT WITH A BANGGGGGG💣
+
 IF YOU ARE RECEIVING THIS
 DON'T COME TO THE ISLAND 
 
@@ -246,55 +249,82 @@ COME TO THE ISLAND
 
 TO JOIN US!!!!
 
-FOR THE LAST PARTY OF OUR LIVES
-FOR THE LAST DAY OF OUR LIVES!!!!!
+FOR THE LAST PARTY 
+OF OUR LIVES
 
-FOR THE BLOWOUT BASHHHHHHHHH!!!
+FOR THE LAST DAY 
+OF OUR LIVES!!!!!
+
+THIS TRANSMISSION IS NOT AN SOS!!
+IT'S TOO LATE FOR THAT.
+
+THIS TRANSMISSION !!!
+IS AN INVITATION TO MAKE OUR LAST DAY
+THE BEST DAY EVER.
+
+THIS TRANSMISSION
+IS A CALLING TO
+THE BLOWOUT DARTY WITH US.
+
+TO THE BLOWOUT BASHHHHHHHHH!!!
 
 MAY 2ND. KAPPA ALPHA. THE LAST BASH.
 🎉🎉🎉🎉🎉🎉🎉🎉🎉`,
     pacing: {
       0:  { ms: 70, pauseAfter: 650 },  // WE TOOK A VOTE.
       2:  { ms: 74, pauseAfter: 650 },  // IT'S TOO LATE FOR US
-      4:  { ms: 70 },                   // AFTER CRASHING...
-      5:  { ms: 70, pauseAfter: 450 },  // AFTER THE STORM
-      7:  { ms: 64 },                   // WE TRIED RATIONING
-      8:  { ms: 64 },                   // WE TRIED FIGHTING...
-      9:  { ms: 64, pauseAfter: 550 },  // WE TRIED SURVIVAL
-      11: { ms: 70, pauseAfter: 350 },  // HOWEVER, WE'VE DECIDED
-      12: { ms: 62 },
+      4:  { ms: 70 },                   // AFTER SAILING THE WORLD
+      5:  { ms: 70 },                   // AFTER THE STORM
+      6:  { ms: 70, pauseAfter: 450 },  // AFTER CRASHING...
+      8:  { ms: 64 },                   // WE TRIED RATIONING
+      9:  { ms: 64 },                   // WE TRIED FIGHTING...
+      10: { ms: 64, pauseAfter: 550 },  // WE TRIED SURVIVAL
+      12: { ms: 70, pauseAfter: 350 },  // HOWEVER, WE'VE DECIDED
       13: { ms: 62 },
-      14: { ms: 62, pauseAfter: 420 },
-      16: { ms: 62 },
-      17: { ms: 62, pauseAfter: 500 },
-      19: { ms: 64 },
-      20: { ms: 64, pauseAfter: 650 },  // TRYING TO SURVIVE.
-      22: { ms: 54 },                   // INSTEAD...
-      23: { ms: 48 },
-      24: { ms: 42, pauseAfter: 300 },
-      26: { ms: 22 },
+      14: { ms: 62 },
+      15: { ms: 62, pauseAfter: 420 },
+      17: { ms: 62 },
+      18: { ms: 62, pauseAfter: 500 },
+      20: { ms: 64 },
+      21: { ms: 64, pauseAfter: 650 },  // TRYING TO SURVIVE.
+      23: { ms: 54 },                   // INSTEAD...
+      24: { ms: 48 },
+      25: { ms: 42, pauseAfter: 300 },
       27: { ms: 22 },
-      28: { ms: 22, pauseAfter: 250 },
-      30: { ms: 38, pauseAfter: 220 },
-      32: { ms: 28 },
-      33: { ms: 58, pauseAfter: 180 },
-      34: { ms: 58, pauseAfter: 180 },
-      35: { ms: 32, pauseAfter: 350 },
-      37: { ms: 20 },
+      28: { ms: 22 },
+      29: { ms: 22, pauseAfter: 250 },
+      31: { ms: 38, pauseAfter: 220 },  // AND WITH IT
+      33: { ms: 28 },                   // WE ARE THROWING
+      34: { ms: 105, pauseAfter: 650 }, // ONE.
+      35: { ms: 105, pauseAfter: 650 }, // LAST.
+      36: { ms: 105, pauseAfter: 800 }, // PARTY.
       38: { ms: 20 },
-      39: { ms: 20, pauseAfter: 260 },
-      41: { ms: 18 },
-      42: { ms: 14, pauseAfter: 300 },
-      44: { ms: 28 },
-      45: { ms: 28, pauseAfter: 250 },
-      47: { ms: 44, pauseAfter: 300 },
-      49: { ms: 24, pauseAfter: 120 },
-      51: { ms: 16, pauseAfter: 260 },
-      53: { ms: 18 },
-      54: { ms: 16, pauseAfter: 250 },
-      56: { ms: 12, pauseAfter: 360 },
-      59: { ms: 20 },
-      60: { ms: 120 }
+      39: { ms: 20 },
+      40: { ms: 20, pauseAfter: 260 },
+      42: { ms: 18 },
+      43: { ms: 14, pauseAfter: 300 },
+      45: { ms: 28 },
+      46: { ms: 28, pauseAfter: 250 },
+      48: { ms: 44, pauseAfter: 300 },
+      49: { ms: 28, pauseAfter: 250 },
+      51: { ms: 44, pauseAfter: 300 },
+      53: { ms: 24, pauseAfter: 120 },
+      55: { ms: 16, pauseAfter: 250 },
+      57: { ms: 12 },
+      58: { ms: 12, pauseAfter: 360 },
+      60: { ms: 12 },
+      61: { ms: 12, pauseAfter: 360 },
+      63: { ms: 24 },
+      64: { ms: 24, pauseAfter: 300 },
+      66: { ms: 24 },
+      67: { ms: 16 },
+      68: { ms: 14, pauseAfter: 300 },
+      70: { ms: 24 },
+      71: { ms: 18 },
+      72: { ms: 14, pauseAfter: 300 },
+      74: { ms: 16, pauseAfter: 260 },
+      76: { ms: 20 },
+      77: { ms: 120 }
     }
   },
 
