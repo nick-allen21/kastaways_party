@@ -269,8 +269,8 @@ THE BLOWOUT DARTY WITH US.
 
 TO THE BLOWOUT BASHHHHHHHHH!!!
 
-MAY 2ND. KAPPA ALPHA. THE LAST BASH.
-🎉🎉🎉🎉🎉🎉🎉🎉🎉`,
+🏝️MAY 2ND. KAPPA ALPHA. KASTAWAYS🏝️
+🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉`,
     pacing: {
       0:  { ms: 70, pauseAfter: 650 },  // WE TOOK A VOTE.
       2:  { ms: 74, pauseAfter: 650 },  // IT'S TOO LATE FOR US
