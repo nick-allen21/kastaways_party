@@ -71,15 +71,15 @@ function inAtmosphericWindow(pt) {
   return pt.hour >= 1 && pt.hour < 5;
 }
 
-// Vector D — the actual party window: Sat May 2 2026, 14:00–19:00 PT.
-function inPartyWindow(pt) {
-  return (
-    pt.year === 2026 &&
-    pt.month === 5 &&
-    pt.day === 2 &&
-    pt.hour >= 14 &&
-    pt.hour < 19
-  );
+// Vector D — DISABLED. The 2pm karaider party-window takeover is turned
+// off for the final day so receivers see the normal T6 ("FINAL BASH HAS
+// BEGUN") transmission all afternoon without an automatic raider
+// intercept stomping the party reveal. Atmospheric window (1-5am) +
+// magic-phrase + cumulative-raider-mention vectors are unaffected.
+// `?intercept=party` still works for QA.
+// eslint-disable-next-line no-unused-vars
+function inPartyWindow(_pt) {
+  return false;
 }
 
 function tripsMagicPhrase(text) {

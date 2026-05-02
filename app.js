@@ -1018,9 +1018,13 @@
     return pt && pt.hour >= 1 && pt.hour < 5;
   }
 
-  function hijackInPartyWindow(pt) {
-    return pt && pt.year === 2026 && pt.month === 5 && pt.day === 2 &&
-           pt.hour >= 14 && pt.hour < 19;
+  function hijackInPartyWindow(_pt) {
+    // Disabled: the 2pm karaider party-window takeover is turned off for
+    // the final day so users see the normal T6 transmission all afternoon
+    // without an automatic raider intercept hijacking the party reveal.
+    // The atmospheric (1-5am) window, magic-phrase trigger, and 3+ raider
+    // mention triggers are unaffected. ?intercept=party still works for QA.
+    return false;
   }
 
   // Returns true if this submit should ALWAYS reach the server (so a
@@ -2172,7 +2176,19 @@
       if (!activeGlitchTimer) scheduleNextGlitch(2500, 5000);
     });
 
-    if (shouldRunBoot()) {
+    // Skip the boot pre-roll on the final-bash day (T6 / >= SIGNAL_TERMINATED).
+    // We want the user to land straight into the blue party-mode transmission
+    // for the "surprise reveal" effect — no "ESTABLISHING TRANSMISSION..." /
+    // "LOCATING SOURCE..." chrome between them and the celebration. The
+    // ?boot=1 override still wins for QA so we can preview the boot anytime.
+    const __forceBoot = new URLSearchParams(window.location.search).get("boot") === "1";
+    const __finalBashSkipBoot =
+      !__forceBoot && (
+        (initial && initial.id === "T6") ||
+        now >= SIGNAL_TERMINATED
+      );
+
+    if (shouldRunBoot() && !__finalBashSkipBoot) {
       if (transmissionEl) transmissionEl.dataset.hidden = "true";
       try {
         await runBoot();
@@ -2182,6 +2198,10 @@
       markBooted();
     } else {
       if (transmissionEl) transmissionEl.dataset.hidden = "false";
+      // If we suppressed the boot for the final-bash reveal, still flag
+      // the session as booted so a subsequent navigation back to an
+      // earlier transmission via the log doesn't re-trigger the pre-roll.
+      if (__finalBashSkipBoot) markBooted();
     }
 
     renderTransmission(initial);
