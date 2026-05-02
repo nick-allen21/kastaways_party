@@ -429,29 +429,35 @@ FOR THE AGES!!! 🎶🍹
 
 KAPPA ALPHA · OUT!!! 🫡`,
     pacing: {
-      0:  { ms: 70, pauseAfter: 1000 }, // THE FINAL BASH HAS BEGUN.
-      2:  { ms: 24 },                   // THE RUM IS ALREADY FLOWING.
-      3:  { ms: 24, pauseAfter: 400 },  // THE MUSIC IS ALREADY PLAYING.
-      5:  { ms: 70 },                   // WE ARE DANCING
-      7:  { ms: 70, pauseAfter: 700 },  // OF THE KREWSHIP.
-      9:  { ms: 18 },                   // THE STAGE IS SHAKING.
-      10: { ms: 18, pauseAfter: 500 },  // THE WHOLE BEACH IS SHAKING.
-      12: { ms: 70 },                   // WE DO NOT WANT
-      13: { ms: 70, pauseAfter: 600 },  // TO BE SAVED.
-      15: { ms: 90, pauseAfter: 800 },  // NOT ANYMORE.
-      17: { ms: 70, pauseAfter: 700 },  // THIS IS NO LONGER AN SOS.
-      19: { ms: 70 },                   // THIS IS AN INVITATION
-      20: { ms: 70, pauseAfter: 700 },  // TO THE PARTY OF A LIFETIME.
-      22: { ms: 70 },                   // COME JOIN THE ORDER
-      23: { ms: 70, pauseAfter: 700 },  // ON OUR LAST DAY.
-      25: { ms: 70 },                   // THE LAST BASH
-      26: { ms: 70, pauseAfter: 600 },  // KA ISLAND WILL EVER SEE.
-      28: { ms: 70 },                   // THE LAST BASH
-      29: { ms: 70, pauseAfter: 600 },  // KA WILL EVER SEE.
-      31: { ms: 70, pauseAfter: 700 },  // COME JOIN US HERE.
-      33: { ms: 70 },                   // THIS IS A PARTY
-      34: { ms: 70, pauseAfter: 900 },  // FOR THE AGES.
-      36: { ms: 90 }                    // KAPPA ALPHA · OUT.
+      // T6 readout was slowed for gravity (70-90ms / long pauses), but the
+      // copy is celebratory — the slow tempo was killing the energy. Pace
+      // tightened ~30% across the board: per-char ms trimmed and pauseAfter
+      // gaps shortened so the FINAL BASH transmission lands punchy instead
+      // of funereal. Rum/music/stage/beach lines stay the breathless fast
+      // burst they always were, just a touch faster.
+      0:  { ms: 50, pauseAfter: 700 },  // THE FINAL BASH HAS BEGUN.
+      2:  { ms: 18 },                   // THE RUM IS ALREADY FLOWING.
+      3:  { ms: 18, pauseAfter: 300 },  // THE MUSIC IS ALREADY PLAYING.
+      5:  { ms: 50 },                   // WE ARE DANCING
+      7:  { ms: 50, pauseAfter: 500 },  // OF THE KREWSHIP.
+      9:  { ms: 14 },                   // THE STAGE IS SHAKING.
+      10: { ms: 14, pauseAfter: 350 },  // THE WHOLE BEACH IS SHAKING.
+      12: { ms: 50 },                   // WE DO NOT WANT
+      13: { ms: 50, pauseAfter: 450 },  // TO BE SAVED.
+      15: { ms: 65, pauseAfter: 550 },  // NOT ANYMORE.
+      17: { ms: 50, pauseAfter: 500 },  // THIS IS NO LONGER AN SOS.
+      19: { ms: 50 },                   // THIS IS AN INVITATION
+      20: { ms: 50, pauseAfter: 500 },  // TO THE PARTY OF A LIFETIME.
+      22: { ms: 50 },                   // COME JOIN THE ORDER
+      23: { ms: 50, pauseAfter: 500 },  // ON OUR LAST DAY.
+      25: { ms: 50 },                   // THE LAST BASH
+      26: { ms: 50, pauseAfter: 450 },  // KA ISLAND WILL EVER SEE.
+      28: { ms: 50 },                   // THE LAST BASH
+      29: { ms: 50, pauseAfter: 450 },  // KA WILL EVER SEE.
+      31: { ms: 50, pauseAfter: 500 },  // COME JOIN US HERE.
+      33: { ms: 50 },                   // THIS IS A PARTY
+      34: { ms: 50, pauseAfter: 600 },  // FOR THE AGES.
+      36: { ms: 65 }                    // KAPPA ALPHA · OUT.
     }
   }
 ];
